@@ -30,7 +30,10 @@ import com.haramhide.core.capture.SecurePolicy
 import com.haramhide.core.context.ActivePackageMonitor
 import com.haramhide.core.data.AppSettings
 import com.haramhide.core.data.SettingsRepository
+import com.haramhide.core.detect.DetectorConfig
 import com.haramhide.core.detect.HeuristicDetector
+import com.haramhide.core.detect.NudeNetDetector
+import com.haramhide.core.detect.SkinPrescreen
 import com.haramhide.core.detect.Sensitivity
 import com.haramhide.core.detect.TwoStageDetector
 import com.haramhide.core.overlay.BlurSpec
@@ -77,8 +80,17 @@ class ProtectionService : Service() {
 
     private val signals = FrameSignals()
     private val stateMachine = MaskStateMachine()
+
+    // F0 soxta detektori — taqqoslash uchun saqlanadi (bir klass ikkala bosqichni ham beradi)
     private val heuristic = HeuristicDetector()
-    private val detector = TwoStageDetector(heuristic, heuristic)
+
+    // F1: arzon darvoza + haqiqiy model
+    private val skinPrescreen = SkinPrescreen()
+    private var nudeNet: NudeNetDetector? = null
+
+    @Volatile private var detector = TwoStageDetector(heuristic, heuristic)
+    @Volatile private var currentEngine: String? = null
+    @Volatile private var engineLabel: String = "HEURISTIC"
 
     private var projection: MediaProjection? = null
     private var capturer: ScreenCapturer? = null
@@ -96,6 +108,7 @@ class ProtectionService : Service() {
     @Volatile private var framesInWindow = 0
     @Volatile private var fps = 0f
     @Volatile private var captureSize = "-"
+    @Volatile private var lastLabels: String = ""
     @Volatile private var scrollingState = false
     private var scrollHighFrames = 0
     private var lastLogMs = 0L
@@ -133,11 +146,25 @@ class ProtectionService : Service() {
         Log.i(TAG, "Xizmat yaratildi")
     }
 
+    /**
+     * MUHIM: `startForeground(type = mediaProjection)` ni **faqat** rozilik
+     * bo'lganda chaqirish mumkin.
+     *
+     * Avval bu metod har qanday amal uchun uni chaqirardi. Natijada
+     * bildirishnomadagi «To'xtatish» tugmasi (yoki har qanday boshqa amal)
+     * sessiya allaqachon tugagan holatda ilovani **qulatardi**:
+     *
+     * ```
+     * SecurityException: Starting FGS with type mediaProjection ...
+     *   requires ... Media projection screen capture permission
+     * ```
+     *
+     * Android 14+ da tizim FGS turini rozilik tokeni bilan tekshiradi.
+     * Shuning uchun endi faqat [ACTION_START_SESSION] FGS ni ko'taradi —
+     * u yerda rozilik hozirgina olingan. Qolgan amallar mavjud
+     * bildirishnomani yangilaydi, xolos.
+     */
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // Android 14+: FGS bildirishnomasi MediaProjection olinishidan OLDIN
-        // ko'rsatilishi shart, aks holda MissingForegroundServiceTypeException (TZ C-08).
-        promoteToForeground(running = projection != null)
-
         when (intent?.action) {
             ACTION_START_SESSION -> {
                 val code = intent.getIntExtra(EXTRA_RESULT_CODE, 0)
@@ -146,7 +173,14 @@ class ProtectionService : Service() {
                 } else {
                     @Suppress("DEPRECATION") intent.getParcelableExtra(EXTRA_RESULT_DATA)
                 }
-                if (data != null) startSessionInternal(code, data) else stopSelfSafely()
+                if (data != null) {
+                    // FGS bildirishnomasi MediaProjection olinishidan OLDIN
+                    // ko'rsatilishi shart (TZ C-08).
+                    promoteToForeground(running = false)
+                    startSessionInternal(code, data)
+                } else {
+                    stopSelfSafely()
+                }
             }
 
             ACTION_STOP -> {
@@ -154,10 +188,23 @@ class ProtectionService : Service() {
                 stopSelfSafely()
             }
 
+            null -> {
+                // Tizim xizmatni qayta tikladi (START_STICKY). Sessiya yo'q —
+                // FGS ni ko'tara olmaymiz, shuning uchun shunchaki to'xtaymiz.
+                if (!isForeground) stopSelf()
+            }
+
             ACTION_SHIELD_CHECK -> updateShieldForCurrentApp()
+
+            ACTION_BENCHMARK -> captureHandler.post {
+                val nn = nudeNet
+                if (nn == null) Log.w(TAG, "NudeNet yuklanmagan")
+                else { nn.benchmarkNow(5); nn.sweep() }
+            }
 
             ACTION_RESET_STATS -> {
                 stateMachine.resetStats()
+                nudeNet?.resetStats()
                 framesProcessed = 0
                 processNsTotal = 0
                 maxProcessMs = 0
@@ -187,6 +234,8 @@ class ProtectionService : Service() {
         mainHandler.removeCallbacksAndMessages(null)
         overlay.detach()
         detector.close()
+        nudeNet?.close()
+        nudeNet = null
         scope.cancel()
         captureThread.quitSafely()
         ProtectionState.setStatus(ProtectionState.Status.STOPPED)
@@ -239,7 +288,7 @@ class ProtectionService : Service() {
 
         overlay.setShield(false)
         Notifications.cancelAction(this)
-        promoteToForeground(running = true)
+        updateNotification(running = true)
         ProtectionState.setStatus(ProtectionState.Status.RUNNING)
         scope.launchSet { settingsRepo.setProtectionDesired(true) }
         Log.i(TAG, "Sessiya boshlandi: $captureSize")
@@ -270,7 +319,7 @@ class ProtectionService : Service() {
         sessionLostCount++
         stopSessionInternal(lost = true)
         ProtectionState.setStatus(ProtectionState.Status.SESSION_LOST)
-        promoteToForeground(running = false)
+        updateNotification(running = false)
         updateShieldForCurrentApp()
         Log.w(TAG, "Sessiya uzildi (jami=$sessionLostCount)")
     }
@@ -330,6 +379,9 @@ class ProtectionService : Service() {
 
         val sensitivity = parseSensitivity(s.sensitivity)
         val detections = if (runDetector) detector.run(frame, sensitivity) else emptyList()
+        if (detections.isNotEmpty()) {
+            lastLabels = detections.joinToString(",") { it.label }.take(80)
+        }
 
         // --- Mask State Machine (TZ FR-105)
         val masks = stateMachine.update(
@@ -427,6 +479,9 @@ class ProtectionService : Service() {
                 activePackage = lastPackage,
                 captureSize = captureSize,
                 edgeAverage = heuristic.lastEdgeAverage,
+                engine = engineLabel,
+                inferenceMs = nudeNet?.lastInferenceMs ?: 0L,
+                lastLabels = lastLabels,
             )
         )
     }
@@ -436,13 +491,17 @@ class ProtectionService : Service() {
         val st = stateMachine
         Log.i(
             METRIC_TAG,
-            "fps=%.1f avg=%.1fms max=%dms mask=%d/%d flicker=%d probe=%d/%d A=%.2f edge=%.1f stageB=%.0f%% scroll=%b pkg=%s"
+            "engine=%s inf=%dms(pre=%d run=%d post=%d) runAvg=%d/%d fps=%.1f avg=%.1fms max=%dms mask=%d/%d flicker=%d probe=%d/%d A=%.2f teri=%.2f stageB=%.0f%% labels=[%s] pkg=%s"
                 .format(
+                    engineLabel, nudeNet?.lastInferenceMs ?: 0L,
+                    nudeNet?.lastPreprocessMs ?: 0L, nudeNet?.lastRunMs ?: 0L,
+                    nudeNet?.lastPostprocessMs ?: 0L,
+                    nudeNet?.runAvgMs ?: 0L, nudeNet?.runSamples ?: 0L,
                     fps, avgMsFast(), maxProcessMs,
                     st.masks().count { it.isVisible }, st.totalMasksCreated,
                     st.flickerEvents, st.probesConfirmed, st.totalProbes,
-                    detector.lastStageAScore, heuristic.lastEdgeAverage,
-                    detector.stageBRatio() * 100, scrollingState, lastPackage ?: "-",
+                    detector.lastStageAScore, skinPrescreen.lastPeakRatio,
+                    detector.stageBRatio() * 100, lastLabels, lastPackage ?: "-",
                 )
         )
     }
@@ -460,7 +519,11 @@ class ProtectionService : Service() {
             append("  MILTILLASH ").append(st.flickerEvents).append('\n')
             append("probe ").append(st.probesConfirmed).append("/").append(st.totalProbes)
             append("  A ").append(String.format("%.2f", detector.lastStageAScore))
-            append("  edge ").append(String.format("%.1f", heuristic.lastEdgeAverage)).append('\n')
+            append("  teri ").append(String.format("%.2f", skinPrescreen.lastPeakRatio)).append('\n')
+            append(engineLabel)
+            nudeNet?.let { append("  ").append(it.lastInferenceMs).append("ms") }
+            append('\n')
+            if (lastLabels.isNotEmpty()) append(lastLabels).append('\n')
             append(pkg)
         }
     }
@@ -475,6 +538,46 @@ class ProtectionService : Service() {
         stateMachine.updateConfig(
             MaskConfig(releasePolicy = parseReleasePolicy(s.releasePolicy))
         )
+        applyEngine(s.detectorEngine)
+    }
+
+    /**
+     * Detektor dvigatelini almashtiradi.
+     *
+     * Model 12 MB va uni yuklash sekin, shuning uchun qurish capture oqimida
+     * bajariladi va natija bir marta keshlanadi. [TwoStageDetector.close]
+     * bu yerda ATAYLAB chaqirilmaydi — u asosidagi sessiyani yopib yuborardi
+     * va orqaga qaytishda modelni qaytadan yuklashga majbur qilardi.
+     */
+    private fun applyEngine(engine: String) {
+        if (engine == currentEngine) return
+        currentEngine = engine
+        captureHandler.post {
+            detector = if (engine == ENGINE_NUDENET) {
+                val nn = nudeNet ?: runCatching {
+                    // Capture Tier B da ishlaydi (CaptureConfig.TIER_B) — detektor ham shunga mos.
+                    NudeNetDetector(applicationContext, DetectorConfig.TIER_B)
+                }
+                    .onFailure { Log.e(TAG, "NudeNet yuklanmadi", it) }
+                    .getOrNull()
+                if (nn != null && nn.isReady) {
+                    nudeNet = nn
+                    engineLabel = ENGINE_NUDENET
+                    TwoStageDetector(skinPrescreen, nn)
+                } else {
+                    // Fail-safe: model yuklanmasa evristikaga qaytamiz, lekin
+                    // buni foydalanuvchiga ko'rsatamiz — jimgina ishlamay
+                    // qolish eng yomon holat (C-13 dan olingan saboq).
+                    engineLabel = "NUDENET (xato: ${nn?.loadError ?: "yuklanmadi"})"
+                    Log.e(TAG, "NudeNet tayyor emas — evristikaga qaytildi")
+                    TwoStageDetector(heuristic, heuristic)
+                }
+            } else {
+                engineLabel = ENGINE_HEURISTIC
+                TwoStageDetector(heuristic, heuristic)
+            }
+            Log.i(TAG, "Detektor: $engineLabel obj=${System.identityHashCode(nudeNet)}")
+        }
     }
 
     private fun blurSpec(s: AppSettings) = BlurSpec(
@@ -489,6 +592,13 @@ class ProtectionService : Service() {
         runCatching { ReleasePolicy.valueOf(v) }.getOrDefault(ReleasePolicy.PROBE)
 
     // ------------------------------------------------------------------ helpers
+
+    /** Bildirishnomani yangilaydi. FGS holatiga tegmaydi — xavfsiz. */
+    private fun updateNotification(running: Boolean) {
+        if (!isForeground) return
+        getSystemService(NotificationManager::class.java)
+            .notify(Notifications.ID_FOREGROUND, Notifications.foreground(this, running))
+    }
 
     private fun promoteToForeground(running: Boolean) {
         val notification = Notifications.foreground(this, running)
@@ -619,6 +729,7 @@ class ProtectionService : Service() {
         const val ACTION_STOP = "com.haramhide.app.action.STOP"
         const val ACTION_SHIELD_CHECK = "com.haramhide.app.action.SHIELD_CHECK"
         const val ACTION_RESET_STATS = "com.haramhide.app.action.RESET_STATS"
+        const val ACTION_BENCHMARK = "com.haramhide.app.action.BENCHMARK"
 
         const val EXTRA_RESULT_CODE = "result_code"
         const val EXTRA_RESULT_DATA = "result_data"
@@ -638,6 +749,9 @@ class ProtectionService : Service() {
         private const val STATS_INTERVAL_MS = 500L
         private const val METRIC_LOG_INTERVAL_MS = 1_000L
         private const val METRIC_TAG = "HaramHideMetrics"
+
+        const val ENGINE_NUDENET = "NUDENET"
+        const val ENGINE_HEURISTIC = "HEURISTIC"
         private const val SHIELD_POLL_MS = 1_000L
 
         fun startSession(context: Context, resultCode: Int, data: Intent) {
@@ -646,6 +760,12 @@ class ProtectionService : Service() {
                 .putExtra(EXTRA_RESULT_CODE, resultCode)
                 .putExtra(EXTRA_RESULT_DATA, data)
             context.startForegroundService(intent)
+        }
+
+        fun benchmark(context: Context) {
+            context.startService(
+                Intent(context, ProtectionService::class.java).setAction(ACTION_BENCHMARK)
+            )
         }
 
         fun resetStats(context: Context) {

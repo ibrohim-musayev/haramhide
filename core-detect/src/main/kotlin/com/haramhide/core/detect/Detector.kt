@@ -22,7 +22,11 @@ interface StageAClassifier {
  * F1 da bu yerga NudeNet v3 `320n.onnx` (AGPL-3.0) keladi.
  */
 interface StageBDetector {
-    fun detect(frame: Frame, minConfidence: Float): List<Detection>
+    /**
+     * @param sensitivity klass filtri shunga bog'liq — masalan NudeNet ning
+     *   `COVERED_*` klasslari faqat STRICT rejimda blur qilinadi.
+     */
+    fun detect(frame: Frame, minConfidence: Float, sensitivity: Sensitivity): List<Detection>
 
     fun close() {}
 }
@@ -46,7 +50,7 @@ class TwoStageDetector(
         lastStageAScore = a
         if (a < sensitivity.tLow) return emptyList()
         stageBRuns++
-        return stageB.detect(frame, sensitivity.tDet)
+        return stageB.detect(frame, sensitivity.tDet, sensitivity)
     }
 
     /** Stage B ishga tushish ulushi — batareya baholash uchun (TZ 6.2). */

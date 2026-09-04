@@ -1,0 +1,18 @@
+nudenet_320n.onnx
+=================
+Manba : https://github.com/notAI-tech/NudeNet
+        release v3.4-weights, asset "320n.onnx"
+sha256: c15d8273adad2d0a92f014cc69ab2d6c311a06777a55545f2c4eb46f51911f0f
+Hajmi : 11.59 MB (FP32)
+Asos  : ultralytics YOLOv8n, 320x320 da o'qitilgan
+
+LITSENZIYA: GNU Affero General Public License v3.0
+Ham repozitoriya, ham model og'irliklari AGPL-3.0 ostida
+(YOLOv8 ning o'zi ham AGPL-3.0).
+
+Aynan shu sabab HaramHide AGPL-3.0 ni tanlagan — batafsil
+docs/ADR-002-litsenziya-agpl.md da.
+
+KVANTIZATSIYA: bajarilmagan. INT8 ga o'tkazish kalibrlash uchun haqiqiy
+rasmlar to'plamini talab qiladi, u esa hozircha yo'q (TZ 8.5). FP32 12 MB
+APK chegarasiga (45 MB) bemalol sig'adi. Golden set yig'ilgach qayta ko'riladi.

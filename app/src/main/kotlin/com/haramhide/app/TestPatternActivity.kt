@@ -3,6 +3,7 @@ package com.haramhide.app
 import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
@@ -31,7 +32,54 @@ class TestPatternActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(PatternView(this))
+        val photo = intent?.getStringExtra(EXTRA_PHOTO)
+        setContentView(
+            if (photo != null) PhotoView(this, photo) else PatternView(this)
+        )
+    }
+
+    /**
+     * Haqiqiy rasmni to'liq ekranda ko'rsatadi — modelni sinash uchun.
+     *
+     * Rasm ilovaning `filesDir` idan o'qiladi va **repozitoriyaga qo'shilmaydi**.
+     * Sinov uchun quyidagicha joylanadi:
+     * ```
+     * adb shell "cat /data/local/tmp/x.jpg | run-as com.haramhide.app.debug tee files/x.jpg >/dev/null"
+     * ```
+     */
+    private class PhotoView(context: Context, name: String) : View(context) {
+        private val bitmap: Bitmap? = runCatching {
+            BitmapFactory.decodeFile(java.io.File(context.filesDir, name).absolutePath)
+        }.getOrNull()
+
+        private val paint = Paint(Paint.FILTER_BITMAP_FLAG)
+        private val src = Rect()
+        private val dst = Rect()
+        private val label = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = Color.WHITE
+            textAlign = Paint.Align.CENTER
+        }
+
+        override fun onDraw(canvas: Canvas) {
+            canvas.drawColor(Color.BLACK)
+            val bmp = bitmap
+            if (bmp == null) {
+                label.textSize = width * 0.04f
+                canvas.drawText("Rasm topilmadi", width / 2f, height / 2f, label)
+                return
+            }
+            // Nisbatni saqlab, markazga joylashtirish
+            val scale = minOf(width.toFloat() / bmp.width, height.toFloat() / bmp.height)
+            val w = (bmp.width * scale).toInt()
+            val h = (bmp.height * scale).toInt()
+            src.set(0, 0, bmp.width, bmp.height)
+            dst.set((width - w) / 2, (height - h) / 2, (width + w) / 2, (height + h) / 2)
+            canvas.drawBitmap(bmp, src, dst, paint)
+        }
+    }
+
+    companion object {
+        const val EXTRA_PHOTO = "photo"
     }
 
     private class PatternView(context: Context) : View(context) {

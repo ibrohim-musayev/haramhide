@@ -17,6 +17,10 @@ android {
 }
 
 dependencies {
+    // NudeNet .onnx formatida keladi — konversiya qilmaslik F1 ni bloklamaslikning
+    // eng ishonchli yo'li (ADR-001).
+    api(libs.onnxruntime.android)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
     testImplementation(libs.junit)

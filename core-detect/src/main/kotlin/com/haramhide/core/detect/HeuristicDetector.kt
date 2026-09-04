@@ -59,7 +59,11 @@ class HeuristicDetector(
         return best
     }
 
-    override fun detect(frame: Frame, minConfidence: Float): List<Detection> {
+    override fun detect(
+        frame: Frame,
+        minConfidence: Float,
+        sensitivity: Sensitivity,
+    ): List<Detection> {
         compute(frame)
         if (cols == 0 || rows == 0) return emptyList()
 

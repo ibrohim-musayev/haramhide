@@ -38,6 +38,12 @@ object ProtectionState {
         val activePackage: String? = null,
         val captureSize: String = "-",
         val edgeAverage: Float = 0f,
+        /** "NUDENET" | "HEURISTIC" | "NUDENET (xato)" */
+        val engine: String = "-",
+        /** Stage B inference vaqti, ms. Faqat NudeNet uchun. */
+        val inferenceMs: Long = 0,
+        /** Oxirgi aniqlangan klasslar (NudeNet nomlari). */
+        val lastLabels: String = "",
     )
 
     private val _status = MutableStateFlow(Status.STOPPED)

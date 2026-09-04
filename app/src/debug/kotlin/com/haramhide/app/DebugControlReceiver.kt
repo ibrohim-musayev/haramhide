@@ -31,6 +31,9 @@ class DebugControlReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                intent.getStringExtra("engine")?.let {
+                    repo.setDetectorEngine(it); Log.i(TAG, "engine=$it")
+                }
                 intent.getStringExtra("policy")?.let {
                     repo.setReleasePolicy(it); Log.i(TAG, "policy=$it")
                 }
@@ -49,6 +52,9 @@ class DebugControlReceiver : BroadcastReceiver() {
                 if (intent.hasExtra("debugOverlay")) {
                     repo.setDebugOverlay(intent.getBooleanExtra("debugOverlay", true))
                 }
+                if (intent.getBooleanExtra("bench", false)) {
+                    ProtectionService.benchmark(app)
+                }
                 if (intent.getBooleanExtra("reset", false)) {
                     ProtectionService.resetStats(app)
                     Log.i(TAG, "o'lchovlar tozalandi")
@@ -59,6 +65,16 @@ class DebugControlReceiver : BroadcastReceiver() {
                             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
                     )
                     Log.i(TAG, "test namunasi ochildi")
+                }
+                // Modelni haqiqiy rasmda sinash. Rasm ilovaning o'z files/
+                // katalogidan o'qiladi va repozitoriyaga qo'shilmaydi.
+                intent.getStringExtra("photo")?.let { name ->
+                    app.startActivity(
+                        Intent(app, TestPatternActivity::class.java)
+                            .putExtra(TestPatternActivity.EXTRA_PHOTO, name)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+                    )
+                    Log.i(TAG, "test rasmi ochildi: $name")
                 }
                 if (intent.getBooleanExtra("home", false)) {
                     app.startActivity(

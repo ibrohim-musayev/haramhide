@@ -21,6 +21,8 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("h
  * bog'liq bo'lmasligi uchun. Aylantirish `:app` ning ishi.
  */
 data class AppSettings(
+    /** "NUDENET" (haqiqiy model) | "HEURISTIC" (F0 soxta detektori). */
+    val detectorEngine: String = "NUDENET",
     /** "LOW" | "MEDIUM" | "STRICT" — TZ FR-201. */
     val sensitivity: String = "MEDIUM",
     /** "GAUSSIAN" | "PIXELATE" | "SOLID" — TZ FR-202. */
@@ -47,6 +49,7 @@ class SettingsRepository(private val context: Context) {
 
     val settings: Flow<AppSettings> = context.dataStore.data.map { p ->
         AppSettings(
+            detectorEngine = p[KEY_ENGINE] ?: "NUDENET",
             sensitivity = p[KEY_SENSITIVITY] ?: "MEDIUM",
             blurStyle = p[KEY_BLUR_STYLE] ?: "GAUSSIAN",
             blurIntensity = p[KEY_BLUR_INTENSITY] ?: 70,
@@ -60,6 +63,7 @@ class SettingsRepository(private val context: Context) {
         )
     }
 
+    suspend fun setDetectorEngine(v: String) = edit { it[KEY_ENGINE] = v }
     suspend fun setSensitivity(v: String) = edit { it[KEY_SENSITIVITY] = v }
     suspend fun setBlurStyle(v: String) = edit { it[KEY_BLUR_STYLE] = v }
     suspend fun setBlurIntensity(v: Int) = edit { it[KEY_BLUR_INTENSITY] = v.coerceIn(10, 100) }
@@ -76,6 +80,7 @@ class SettingsRepository(private val context: Context) {
     }
 
     private companion object {
+        val KEY_ENGINE = stringPreferencesKey("detector_engine")
         val KEY_SENSITIVITY = stringPreferencesKey("sensitivity")
         val KEY_BLUR_STYLE = stringPreferencesKey("blur_style")
         val KEY_BLUR_INTENSITY = intPreferencesKey("blur_intensity")

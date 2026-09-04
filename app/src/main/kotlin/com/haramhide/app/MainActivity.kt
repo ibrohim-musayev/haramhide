@@ -267,7 +267,7 @@ private fun StatsCard(stats: ProtectionState.Stats) {
         ),
     ) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text("F0 o'lchovlari", style = MaterialTheme.typography.titleMedium)
+            Text("O'lchovlar", style = MaterialTheme.typography.titleMedium)
             Text(
                 "TZ FR-105 qabul mezoni: statik rasm ustida 10 s davomida " +
                     "MILTILLASH = 0 bo'lishi shart.",
@@ -275,6 +275,8 @@ private fun StatsCard(stats: ProtectionState.Stats) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Spacer(Modifier.height(6.dp))
+            Mono("model                : ${stats.engine}")
+            Mono("inference            : ${stats.inferenceMs} ms")
             Mono("miltillash (flicker) : ${stats.flickerEvents}")
             Mono("kadr / fps           : ${stats.framesProcessed} / ${"%.1f".format(stats.fps)}")
             Mono("ishlov o'rt / maks   : ${"%.1f".format(stats.avgProcessMs)} / ${stats.maxProcessMs} ms")
@@ -282,7 +284,7 @@ private fun StatsCard(stats: ProtectionState.Stats) {
             Mono("probe tasdiq / jami  : ${stats.probesConfirmed} / ${stats.probes}")
             Mono("Stage A ball         : ${"%.2f".format(stats.stageAScore)}")
             Mono("Stage B ulushi       : ${"%.1f".format(stats.stageBRatio * 100)}%")
-            Mono("chekka energiyasi    : ${"%.1f".format(stats.edgeAverage)}")
+            Mono("oxirgi klasslar      : ${stats.lastLabels.ifEmpty { "-" }}")
             Mono("qora kadr (SECURE)   : ${stats.secureFrames}")
             Mono("sessiya uzilishi     : ${stats.sessionLostCount}")
             Mono("capture              : ${stats.captureSize}")
@@ -321,6 +323,7 @@ private fun Mono(text: String) {
 private fun SettingsCard(settings: AppSettings, settingsRepo: SettingsRepository) {
     val context = LocalContext.current
     val activity = context as? ComponentActivity
+    var engine by remember(settings) { mutableStateOf(settings.detectorEngine) }
     var sensitivity by remember(settings) { mutableStateOf(settings.sensitivity) }
     var policy by remember(settings) { mutableStateOf(settings.releasePolicy) }
     var style by remember(settings) { mutableStateOf(settings.blurStyle) }
@@ -335,11 +338,35 @@ private fun SettingsCard(settings: AppSettings, settingsRepo: SettingsRepository
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("Sozlamalar", style = MaterialTheme.typography.titleMedium)
 
+            Text("Detektor", style = MaterialTheme.typography.labelMedium)
+            ChipRow(listOf("NUDENET", "HEURISTIC"), engine) {
+                engine = it
+                save { settingsRepo.setDetectorEngine(it) }
+            }
+            Text(
+                if (engine == "NUDENET")
+                    "NudeNet v3 (YOLOv8n, AGPL-3.0) — haqiqiy model."
+                else
+                    "F0 soxta detektori: teri rangi + tekstura. NSFW ni aniqlamaydi, " +
+                        "faqat taqqoslash uchun qoldirilgan.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+
             Text("Sezgirlik", style = MaterialTheme.typography.labelMedium)
             ChipRow(listOf("LOW", "MEDIUM", "STRICT"), sensitivity) {
                 sensitivity = it
                 save { settingsRepo.setSensitivity(it) }
             }
+            Text(
+                when (sensitivity) {
+                    "LOW" -> "Faqat aniq yalang'ochlik."
+                    "STRICT" -> "Kiyim ostidan bilinadigan qismlar ham. Ko'p xato beradi."
+                    else -> "Yalang'ochlik + ochiq qorin, yalang'och erkak ko'kragi."
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
 
             Text(
                 "Mask'ni bo'shatish siyosati (ADR-003)",
