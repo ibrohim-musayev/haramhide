@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      Modul o'ziga kerakli ruxsatni o'zi e'lon qiladi — shunda uni ishlatgan
+      har qanday ilova ruxsatni avtomatik oladi va modul mustaqil bo'lib qoladi.
+      TZ FR-106 / C-05: bu AccessibilityService o'rniga tanlangan tor qamrovli ruxsat.
+    -->
+    <uses-permission
+        android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions" />
+</manifest>

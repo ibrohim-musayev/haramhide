@@ -1,0 +1,44 @@
+HaramHide
+Copyright (C) 2026 HaramHide contributors
+
+Ushbu dastur erkin dasturiy ta'minot: uni GNU Affero General Public License
+(Free Software Foundation e'lon qilgan, versiya 3 yoki, xohishingizga ko'ra,
+har qanday keyingi versiya) shartlari asosida qayta tarqatishingiz va/yoki
+o'zgartirishingiz mumkin.
+
+Dastur foydali bo'lishi umidida tarqatiladi, LEKIN HECH QANDAY KAFOLATSIZ.
+Batafsil ma'lumot uchun GNU Affero General Public License ga qarang.
+Litsenziya nusxasi ushbu dastur bilan birga keladi (LICENSE fayli).
+
+================================================================================
+UCHINCHI TOMON KOMPONENTLARI
+================================================================================
+
+Quyidagilar F1 fazasida qo'shiladi. Litsenziyalari 2026-09-04 da tekshirilgan
+(TZ v2.1, 8.1-jadval):
+
+--------------------------------------------------------------------------------
+NudeNet (Stage B detektor — 320n.onnx)
+  https://github.com/notAI-tech/NudeNet
+  Litsenziya: GNU Affero General Public License v3.0
+  Model asosi: ultralytics YOLOv8n (AGPL-3.0)
+
+  DIQQAT: ham repozitoriya, ham model og'irliklari AGPL-3.0. Aynan shu sabab
+  HaramHide loyihasi AGPL-3.0 ni tanlagan — ruxsat beruvchi litsenziyali ochiq
+  NSFW *detektori* (bbox qaytaradigani) mavjud emas.
+
+--------------------------------------------------------------------------------
+nsfw_model (Stage A klassifikator — MobileNetV2)
+  https://github.com/GantMan/nsfw_model
+  Litsenziya: MIT
+  Izoh: repozitoriyaning o'zi uchinchi tomon materiali borligini eslatadi.
+
+--------------------------------------------------------------------------------
+Ko'rib chiqilgan, lekin tanlanmagan muqobillar:
+  opennsfw2 (bhky)                  — MIT; asos: Yahoo open_nsfw (BSD-2)
+  Falconsai/nsfw_image_detection    — Apache-2.0; ViT-base, mobil uchun og'ir
+  AdamCodd/vit-base-nsfw-detector   — Apache-2.0; ViT-base, mobil uchun og'ir
+
+--------------------------------------------------------------------------------
+Android Jetpack / AndroidX / Kotlin — Apache-2.0
+  https://developer.android.com  |  https://kotlinlang.org

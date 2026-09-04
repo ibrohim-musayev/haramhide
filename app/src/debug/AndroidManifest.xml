@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Faqat DEBUG build uchun. Relizda bu fayl umuman qo'shilmaydi.
+  Maqsad: F0 tajribalarini adb orqali takrorlanadigan qilish.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <receiver
+            android:name=".DebugControlReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.haramhide.app.debug.CONTROL" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

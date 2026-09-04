@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">HaramHide</string>
+
+    <string name="notif_channel_protection">Himoya holati</string>
+    <string name="notif_channel_action">Harakat talab qilinadi</string>
+
+    <string name="notif_active_title">Himoya faol</string>
+    <string name="notif_active_text">Ekran real vaqtda tekshirilmoqda</string>
+    <string name="notif_off_title">Himoya o\'chiq</string>
+    <string name="notif_off_text">Yoqish uchun bosing</string>
+    <string name="notif_resume_title">Himoya to\'xtadi</string>
+    <string name="notif_resume_text">Ekran qulfi ochildi — qayta yoqish uchun bosing</string>
+    <string name="notif_boot_title">HaramHide tayyor</string>
+    <string name="notif_boot_text">Himoyani yoqish uchun bosing</string>
+
+    <string name="action_stop">To\'xtatish</string>
+    <string name="action_enable">Yoqish</string>
+
+    <string name="shield_text">Himoya o\'chiq — yoqish uchun bildirishnomani bosing</string>
+</resources>
