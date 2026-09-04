@@ -195,6 +195,11 @@ xato emas. Shuning uchun u sozlamaga chiqarilgan:
 *Erkak ko'kragi yopilsinmi*. Erkak avrati bunga bog'liq emas — u har
 qanday sozlamada blur qilinadi.
 
+Kattaroq model (NudeNet `640m`) o'lchandi va u aniqroq — MEDIUM FPR
+0.030 → 0.017. Lekin u hozir ishlatilmayapti: recall o'lchanmagani uchun
+almashtirish tekshirilmagan o'zgarish bo'lardi, va APK 43 dan 68 MB ga
+chiqardi. Batafsil: [`docs/MODEL-VARIANTLARI.md`](docs/MODEL-VARIANTLARI.md).
+
 **Recall hamon o'lchanmagan.** Datasetda `nsfw/` qismi yo'q, ya'ni bu
 o'lchov ilova ortiqcha blur qilmasligini ko'rsatadi, lekin haqiqiy
 kontentni ushlashini ko'rsatmaydi. Hech narsani aniqlamaydigan model
@@ -256,6 +261,7 @@ Bular **hal qilinmagan** va hujjatlashtirilgan:
 | [`docs/F2-NATIJALAR.md`](docs/F2-NATIJALAR.md) | F2 — mahsulot funksiyalari |
 | [`docs/F3-NATIJALAR.md`](docs/F3-NATIJALAR.md) | F3 — reliz tayyorgarligi |
 | [`docs/ANIQLIK-OLCHOVI.md`](docs/ANIQLIK-OLCHOVI.md) | **O'lchangan aniqlik natijalari** |
+| [`docs/MODEL-VARIANTLARI.md`](docs/MODEL-VARIANTLARI.md) | Model variantlari va kvantizatsiya |
 | [`docs/GOLDEN-SET.md`](docs/GOLDEN-SET.md) | Aniqlikni kalibrlash protokoli |
 | [`docs/QURILMA-TESTI.md`](docs/QURILMA-TESTI.md) | **Real qurilma testi ro'yxati** |
 | [`CHANGELOG.md`](CHANGELOG.md) | O'zgarishlar tarixi |
