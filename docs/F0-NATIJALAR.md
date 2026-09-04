@@ -208,7 +208,7 @@ export ANDROID_HOME=~/Library/Android/sdk
 
 # Build va o'rnatish
 ./gradlew :app:assembleDebug
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+adb install -r app/build/outputs/apk/debug/app-arm64-v8a-debug.apk
 
 # Ruxsatlar
 adb shell appops set com.haramhide.app.debug SYSTEM_ALERT_WINDOW allow

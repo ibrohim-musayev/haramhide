@@ -114,7 +114,8 @@ export JAVA_HOME=/path/to/jdk-21
 export ANDROID_HOME=$HOME/Library/Android/sdk
 
 ./gradlew :app:assembleDebug
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+# ABI bo'yicha ajratilgan — emulyator/telefon arm64 bo'lsa:
+adb install -r app/build/outputs/apk/debug/app-arm64-v8a-debug.apk
 ```
 
 Reliz (ABI bo'yicha ajratilgan, R8 bilan):

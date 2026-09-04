@@ -37,11 +37,15 @@ android {
      * TZ 6.2 dagi chegaradan (45 MB) uch barobar oshadi.
      *
      * x86 va x86_64 faqat emulyatorda kerak, haqiqiy Android telefonlarda
-     * amalda uchramaydi. Shuning uchun relizda faqat ARM qoladi va har bir
-     * ABI uchun alohida APK yig'iladi. F-Droid ham, GitHub Releases ham
-     * bunday tarqatishni qo'llab-quvvatlaydi.
+     * amalda uchramaydi. Shuning uchun faqat ARM qoladi va har bir ABI uchun
+     * alohida APK yig'iladi. F-Droid ham, GitHub Releases ham bunday
+     * tarqatishni qo'llab-quvvatlaydi.
      *
-     * Debug build'da universal APK saqlanadi — emulyatorda ishlash uchun.
+     * DIQQAT: bu sozlama BARCHA variantlarga tegishli, debug ham ajratiladi.
+     * Ya'ni `app-debug.apk` yo'q — `app-arm64-v8a-debug.apk` bor.
+     * Emulyator arm64 bo'lgani uchun aynan shu o'rnatiladi.
+     *
+     * x86_64 emulyatorda ishlash kerak bo'lsa, `include` ga uni qo'shing.
      */
     splits {
         abi {

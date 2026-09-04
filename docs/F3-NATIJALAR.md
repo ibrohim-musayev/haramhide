@@ -160,6 +160,21 @@ TZ 12 dagi 8 soatlik soak bajarilmagan.
 - Overlay oyna operatsiyalari asosiy oqimga ko'chirildi. Ilgari ular capture
   oqimidan chaqirilardi va View o'sha oqimning Looper'iga bog'lanib qolardi.
 
+### Tap-to-unblur tekshiruvi
+
+Haqiqiy mask ustida qo'lda sinaldi:
+
+| Qadam | Natija |
+|---|---|
+| Mask yaratildi (evristik detektor + test namunasi) | ✅ `mask=1/1` |
+| Ochish tugmasi mask burchagida ko'rindi | ✅ |
+| 2.5 s bosib turildi | ✅ `Ochish berildi, 5000ms` |
+| Blur ochildi, tekstura ko'rindi | ✅ |
+| 5 s dan keyin mask qaytdi | ✅ `mask=1/1` |
+
+Bu tekshiruv muhim edi, chunki tugma **alohida oyna** va u capture oqimidan
+yaratilganda View noto'g'ri Looper'ga bog'lanib qolishi mumkin edi.
+
 ---
 
 ## 6. Hamon ochiq
@@ -167,5 +182,4 @@ TZ 12 dagi 8 soatlik soak bajarilmagan.
 1. **Aniqlik kalibrlanmagan** — golden set kerak. O'zgarmadi.
 2. **Real qurilmada sinalmagan** — o'zgarmadi.
 3. **8 soatlik soak** bajarilmagan; qisqa soak modelni ishlatmadi (4-bo'lim).
-4. **Tap-to-unblur qo'lda sinalmagan** — kod yozilgan va oyna oqimi xatosi
-   tuzatilgan, lekin bosib turish oqimi haqiqiy mask ustida tekshirilmagan.
+4. ~~Tap-to-unblur sinalmagan~~ — **tekshirildi** (5-bo'lim oxiri).
