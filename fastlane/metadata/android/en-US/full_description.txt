@@ -1,0 +1,28 @@
+HaramHide finds explicit images on your screen and draws a blur over them. All processing happens on your device.
+
+<b>No internet access at all</b>
+
+This is not just a promise: the INTERNET permission is not declared in the app manifest, so the system technically cannot let the app reach the network. Screen images are never stored or sent anywhere. No account, no sign-up.
+
+<b>Features</b>
+
+• On-device detection (NudeNet v3)
+• Three sensitivity levels
+• Per-app selection
+• Cool-down: any change that weakens protection takes effect after 30 minutes
+• Hold a blur to reveal it briefly, with a daily limit
+• Daily statistics, stored only on your device
+• Uzbek, Russian and English
+
+<b>An honest warning</b>
+
+This app does not give a 100% guarantee. It will miss some images and blur others by mistake. It is not a security tool — it is a self-control tool.
+
+Android forbids the following and the app cannot work around it:
+
+• Screen recording consent is requested every single time
+• Protection stops when the screen locks; you must turn it back on after unlocking
+• It does not work inside banking apps or password managers
+• The screen-recording indicator is always visible at the top
+
+Free software, licensed under AGPL-3.0.

@@ -30,6 +30,7 @@ import com.haramhide.core.capture.SecurePolicy
 import com.haramhide.core.context.ActivePackageMonitor
 import com.haramhide.core.data.AppSettings
 import com.haramhide.core.data.DailyStatsRepository
+import com.haramhide.core.data.DetectionLog
 import com.haramhide.core.data.PendingChange
 import com.haramhide.core.data.SettingsRepository
 import com.haramhide.core.detect.DetectorConfig
@@ -81,6 +82,8 @@ class ProtectionService : Service() {
     private lateinit var activePackages: ActivePackageMonitor
     private lateinit var settingsRepo: SettingsRepository
     private lateinit var dailyStats: DailyStatsRepository
+    private lateinit var detectionLog: DetectionLog
+    @Volatile private var suppressions: List<DetectionLog.Suppression> = emptyList()
 
     private val signals = FrameSignals()
     private val stateMachine = MaskStateMachine()
@@ -129,7 +132,32 @@ class ProtectionService : Service() {
         activePackages = ActivePackageMonitor(this)
         settingsRepo = SettingsRepository(applicationContext)
         dailyStats = DailyStatsRepository(applicationContext)
+        detectionLog = DetectionLog(applicationContext)
         overlay.onUnblurRequested = ::onUnblurRequested
+
+        // TZ FR-302: har bir mask lokal jurnalga yoziladi (PIKSELSIZ)
+        stateMachine.onMaskCreated = { mask ->
+            val r = mask.rect
+            scope.launchSet {
+                detectionLog.append(
+                    DetectionLog.Record(
+                        id = System.currentTimeMillis() * 1000 + (mask.id % 1000),
+                        timestampMs = System.currentTimeMillis(),
+                        packageName = lastPackage ?: "?",
+                        sensitivity = settings.sensitivity,
+                        labels = r.label,
+                        score = r.score,
+                        left = r.left, top = r.top, right = r.right, bottom = r.bottom,
+                    )
+                )
+            }
+        }
+        // TZ FR-304: xato deb belgilangan hududlarni o'tkazib yuborish
+        stateMachine.isSuppressed = { d ->
+            val pkg = lastPackage ?: ""
+            suppressions.any { it.covers(pkg, d.centerX, d.centerY) }
+        }
+        refreshSuppressions()
 
         captureThread = HandlerThread("haramhide-capture", android.os.Process.THREAD_PRIORITY_DISPLAY)
         captureThread.start()
@@ -622,7 +650,7 @@ class ProtectionService : Service() {
                 engineLabel = ENGINE_HEURISTIC
                 TwoStageDetector(heuristic, heuristic)
             }
-            Log.i(TAG, "Detektor: $engineLabel obj=${System.identityHashCode(nudeNet)}")
+            Log.i(TAG, "Detektor: $engineLabel")
         }
     }
 
@@ -684,6 +712,16 @@ class ProtectionService : Service() {
 
     private val shieldWatcher = Runnable { updateShieldForCurrentApp() }
 
+    /** Xato deb belgilangan hududlarni qayta o'qiydi (muddati o'tganlari tushib qoladi). */
+    private fun refreshSuppressions() {
+        scope.launchSet {
+            suppressions = detectionLog.activeSuppressions()
+            if (suppressions.isNotEmpty()) {
+                Log.i(TAG, "Faol suppression: ${suppressions.size}")
+            }
+        }
+    }
+
     /**
      * **TZ FR-208 — tap-to-unblur.**
      *
@@ -715,6 +753,7 @@ class ProtectionService : Service() {
      */
     private val pendingWatcher = object : Runnable {
         override fun run() {
+            refreshSuppressions()
             scope.launch {
                 val applied = runCatching { settingsRepo.applyDuePending() }.getOrNull()
                 if (applied != null) {

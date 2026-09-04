@@ -66,6 +66,7 @@ fun MainScreen(
     onSetScrollShield: (Boolean) -> Unit,
     onSetUnblurLimit: (Int) -> Unit,
     onCancelPending: () -> Unit,
+    onOpenLog: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -85,7 +86,7 @@ fun MainScreen(
 
         StatusCard(status, perms.allGranted, context)
         settings.pending?.let { PendingCard(it, onCancelPending) }
-        DailyCard(daily, context)
+        DailyCard(daily, context, onOpenLog)
         PermissionsCard(perms, context, onRequestNotifications)
         SettingsCard(
             settings = settings,
@@ -197,7 +198,7 @@ private fun PendingCard(pending: PendingChange, onCancel: () -> Unit) {
 
 /** TZ FR-305 — bugungi lokal statistika. Hech qayerga yuborilmaydi. */
 @Composable
-private fun DailyCard(daily: DayStats, context: Context) {
+private fun DailyCard(daily: DayStats, context: Context, onOpenLog: () -> Unit) {
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Text(stringResource(R.string.daily_title), style = MaterialTheme.typography.titleMedium)
@@ -208,6 +209,9 @@ private fun DailyCard(daily: DayStats, context: Context) {
             StatRow(stringResource(R.string.daily_masks), daily.masksCreated.toString())
             StatRow(stringResource(R.string.daily_drops), daily.sessionDrops.toString())
             StatRow(stringResource(R.string.daily_unblurs), daily.unblursUsed.toString())
+            TextButton(onClick = onOpenLog) {
+                Text(stringResource(R.string.log_open), fontSize = 12.sp)
+            }
         }
     }
 }

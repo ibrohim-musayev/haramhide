@@ -117,6 +117,24 @@ export ANDROID_HOME=$HOME/Library/Android/sdk
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
+Reliz (ABI bo'yicha ajratilgan, R8 bilan):
+
+```bash
+./gradlew :app:assembleRelease
+# app/build/outputs/apk/release/app-arm64-v8a-release-unsigned.apk   (43 MB)
+# app/build/outputs/apk/release/app-armeabi-v7a-release-unsigned.apk (34 MB)
+```
+
+Imzo kaliti muhit o'zgaruvchilaridan olinadi (`HARAMHIDE_STORE_FILE`,
+`HARAMHIDE_STORE_PASSWORD`, `HARAMHIDE_KEY_ALIAS`, `HARAMHIDE_KEY_PASSWORD`).
+Kalit repozitoriyaga hech qachon qo'shilmaydi.
+
+### Maxfiylik tekshiruvi
+
+`./gradlew check` har safar `verifyPrivacy` vazifasini bajaradi: manifestda
+tarmoq ruxsati yo'qligini va kodda piksel diskka yozadigan chaqiruv
+yo'qligini tekshiradi. Ular paydo bo'lsa build to'xtaydi.
+
 Ruxsatlarni ilovaning o'zidan bering, yoki test uchun:
 
 ```bash

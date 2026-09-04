@@ -1,0 +1,12 @@
+Birinchi ommaviy versiya (F2).
+
+• Qurilmada ishlaydigan aniqlash — NudeNet v3
+• Onboarding, ruxsatlar sehrgari, OEM yo'riqnomalari
+• Kechikish mexanizmi (cool-down)
+• Ilovalar bo'yicha tanlash
+• Blur ustiga bosib ochish, kunlik limit bilan
+• Kunlik lokal statistika va aniqlash jurnali
+• O'zbek, rus, ingliz
+
+Diqqat: aniqlik hali kalibrlanmagan. Ilova ishlaydi, lekin uning recall va
+precision qiymatlari o'lchanmagan.

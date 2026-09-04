@@ -92,6 +92,14 @@
     <string name="daily_masks">Blurs applied</string>
     <string name="daily_drops">Session interruptions</string>
     <string name="daily_unblurs">Reveals used</string>
+    <string name="log_title">Detection log</string>
+    <string name="log_hint">Only metadata is stored here — no images. Mark a wrong blur and that area will not be blurred for an hour.</string>
+    <string name="log_empty">No records yet</string>
+    <string name="log_wrong">Wrong</string>
+    <string name="log_marked">marked</string>
+    <string name="log_export">Export</string>
+    <string name="log_clear">Clear</string>
+    <string name="log_open">Log</string>
     <string name="stats_title">Metrics</string>
     <string name="stats_reset">Reset</string>
     <string name="stats_test">Test pattern</string>

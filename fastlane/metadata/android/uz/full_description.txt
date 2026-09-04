@@ -1,0 +1,28 @@
+HaramHide ekraningizda paydo bo'ladigan nomaqbul tasvirlarni aniqlab, ular ustiga xiralashtiruvchi qatlam chizadi. Barcha ishlov qurilmangizning o'zida bajariladi.
+
+<b>Internetga umuman ulanmaydi</b>
+
+Bu shunchaki va'da emas: INTERNET ruxsati ilova manifestida e'lon qilinmagan, ya'ni tizim unga tarmoqqa chiqishga texnik imkon bermaydi. Ekran tasvirlari hech qayerga saqlanmaydi va yuborilmaydi. Hisob ochish yoki ro'yxatdan o'tish kerak emas.
+
+<b>Asosiy imkoniyatlar</b>
+
+• Qurilmada ishlaydigan aniqlash (NudeNet v3)
+• Uch daraja sezgirlik
+• Ilovalar bo'yicha tanlash
+• Kechikish mexanizmi: himoyani zaiflashtiradigan o'zgarishlar 30 daqiqadan keyin kuchga kiradi
+• Blur ustiga bosib turib, uni qisqa vaqtga ochish (kunlik limit bilan)
+• Kunlik statistika — faqat qurilmada
+• O'zbek, rus, ingliz tillari
+
+<b>Halol ogohlantirish</b>
+
+Bu ilova 100% kafolat bermaydi. U ba'zi tasvirlarni o'tkazib yuboradi, ba'zilarini esa xato blur qiladi. Bu xavfsizlik vositasi emas — o'z-o'zini nazorat vositasi.
+
+Android quyidagilarni taqiqlaydi va ilova ularni chetlab o'ta olmaydi:
+
+• Har safar ekran yozib olishga alohida ruxsat so'raladi
+• Ekran qulflansa himoya to'xtaydi, qulfni ochgach qayta yoqish kerak
+• Bank ilovalari va parol menejerlari ichida ishlamaydi
+• Ekran yuqorisida yozib olish belgisi doim ko'rinib turadi
+
+Ilova erkin dasturiy ta'minot, AGPL-3.0 litsenziyasi ostida.

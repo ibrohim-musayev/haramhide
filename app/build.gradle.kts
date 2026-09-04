@@ -17,11 +17,45 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
         debug {
             applicationIdSuffix = ".debug"
         }
+    }
+
+    /**
+     * ABI ajratish.
+     *
+     * ONNX Runtime har bir ABI uchun ~32-38 MB native kutubxona olib keladi.
+     * To'rttasi birga 131 MB — universal APK 145 MB bo'lib chiqadi va bu
+     * TZ 6.2 dagi chegaradan (45 MB) uch barobar oshadi.
+     *
+     * x86 va x86_64 faqat emulyatorda kerak, haqiqiy Android telefonlarda
+     * amalda uchramaydi. Shuning uchun relizda faqat ARM qoladi va har bir
+     * ABI uchun alohida APK yig'iladi. F-Droid ham, GitHub Releases ham
+     * bunday tarqatishni qo'llab-quvvatlaydi.
+     *
+     * Debug build'da universal APK saqlanadi — emulyatorda ishlash uchun.
+     */
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = false
+        }
+    }
+
+    // F-Droid reproducible build uchun
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = false
     }
 
     buildFeatures {
@@ -56,3 +90,6 @@ dependencies {
 
     testImplementation(libs.junit)
 }
+
+// TZ 10.2 — maxfiylik tekshiruvi `check` ga ulanadi
+apply(from = rootProject.file("gradle/privacy-check.gradle.kts"))

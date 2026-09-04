@@ -1,0 +1,12 @@
+First public release (F2).
+
+• On-device detection — NudeNet v3
+• Onboarding, permission wizard, OEM guidance
+• Cool-down mechanism
+• Per-app selection
+• Hold-to-reveal with a daily limit
+• Daily local statistics and detection log
+• Uzbek, Russian, English
+
+Note: accuracy is not yet calibrated. The app works, but its recall and
+precision have not been measured.

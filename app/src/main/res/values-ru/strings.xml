@@ -92,6 +92,14 @@
     <string name="daily_masks">Размытий наложено</string>
     <string name="daily_drops">Сессия прерывалась</string>
     <string name="daily_unblurs">Открытий использовано</string>
+    <string name="log_title">Журнал обнаружений</string>
+    <string name="log_hint">Здесь хранятся только метаданные — изображений нет. Отметьте ошибочное размытие, и эта область не будет размываться час.</string>
+    <string name="log_empty">Записей пока нет</string>
+    <string name="log_wrong">Ошибка</string>
+    <string name="log_marked">отмечено</string>
+    <string name="log_export">Экспорт</string>
+    <string name="log_clear">Очистить</string>
+    <string name="log_open">Журнал</string>
     <string name="stats_title">Измерения</string>
     <string name="stats_reset">Сбросить</string>
     <string name="stats_test">Тестовый образец</string>

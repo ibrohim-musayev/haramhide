@@ -24,12 +24,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.lifecycleScope
 import com.haramhide.app.ui.AppPickerScreen
+import com.haramhide.app.ui.LogScreen
 import com.haramhide.app.ui.MainScreen
 import com.haramhide.app.ui.OnboardingScreen
 import com.haramhide.app.ui.checkPermissions
 import com.haramhide.core.data.AppSettings
 import com.haramhide.core.data.DailyStatsRepository
 import com.haramhide.core.data.DayStats
+import com.haramhide.core.data.DetectionLog
 import com.haramhide.core.data.SettingsRepository
 import kotlinx.coroutines.launch
 
@@ -39,10 +41,11 @@ import kotlinx.coroutines.launch
  */
 class MainActivity : ComponentActivity() {
 
-    private enum class Screen { MAIN, APPS }
+    private enum class Screen { MAIN, APPS, LOG }
 
     private lateinit var repo: SettingsRepository
     private lateinit var dailyRepo: DailyStatsRepository
+    private lateinit var detectionLog: DetectionLog
 
     private val notificationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -51,6 +54,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         repo = SettingsRepository(applicationContext)
         dailyRepo = DailyStatsRepository(applicationContext)
+        detectionLog = DetectionLog(applicationContext)
         Notifications.ensureChannels(this)
 
         setContent {
@@ -91,6 +95,11 @@ class MainActivity : ComponentActivity() {
         }
 
         when (screen) {
+            Screen.LOG -> LogScreen(
+                log = detectionLog,
+                onBack = { screen = Screen.MAIN },
+            )
+
             Screen.APPS -> AppPickerScreen(
                 selected = s.protectedPackages,
                 onSave = {
@@ -120,6 +129,7 @@ class MainActivity : ComponentActivity() {
                 onSetScrollShield = { save { repo.setScrollShield(it) } },
                 onSetUnblurLimit = { save { repo.setUnblurLimit(it) } },
                 onCancelPending = { save { repo.cancelPending() } },
+                onOpenLog = { screen = Screen.LOG },
             )
         }
     }

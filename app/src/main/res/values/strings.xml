@@ -103,6 +103,14 @@
     <string name="daily_masks">Blur qo\'yildi</string>
     <string name="daily_drops">Sessiya uzildi</string>
     <string name="daily_unblurs">Ochish ishlatildi</string>
+    <string name="log_title">Aniqlash jurnali</string>
+    <string name="log_hint">Bu yerda faqat metama\'lumot saqlanadi — hech qanday rasm yo\'q. Xato blur qo\'yilgan bo\'lsa belgilang, o\'sha hudud bir soat blur qilinmaydi.</string>
+    <string name="log_empty">Hozircha yozuv yo\'q</string>
+    <string name="log_wrong">Xato</string>
+    <string name="log_marked">belgilangan</string>
+    <string name="log_export">Eksport</string>
+    <string name="log_clear">Tozalash</string>
+    <string name="log_open">Jurnal</string>
     <string name="stats_title">O\'lchovlar</string>
     <string name="stats_reset">Tozalash</string>
     <string name="stats_test">Test namunasi</string>

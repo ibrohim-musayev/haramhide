@@ -43,6 +43,15 @@ class MaskStateMachine(
     /** Qayta ishlangan kadrlar soni — probe kutishini kadrda o'lchash uchun. */
     private var frameCounter = 0L
 
+    /** Yangi mask yaratilganda chaqiriladi — lokal jurnal uchun (TZ FR-302). */
+    var onMaskCreated: ((Mask) -> Unit)? = null
+
+    /**
+     * Berilgan detektsiya bo'yicha mask yaratmaslik kerakmi (TZ FR-304).
+     * Foydalanuvchi xato deb belgilagan hududlar shu orqali o'tkazib yuboriladi.
+     */
+    var isSuppressed: ((Detection) -> Boolean)? = null
+
     /** Yaqinda bo'shatilgan masklar — flicker o'lchash uchun. */
     private val recentlyReleased = ArrayDeque<ReleasedRecord>()
 
@@ -50,6 +59,9 @@ class MaskStateMachine(
     @Volatile var flickerEvents: Long = 0L; private set
 
     @Volatile var totalMasksCreated: Long = 0L; private set
+
+    /** Foydalanuvchi xato deb belgilagani uchun o'tkazib yuborilgan detektsiyalar. */
+    @Volatile var suppressedCount: Long = 0L; private set
     @Volatile var totalProbes: Long = 0L; private set
     @Volatile var probesConfirmed: Long = 0L; private set
 
@@ -73,6 +85,7 @@ class MaskStateMachine(
     fun resetStats() {
         flickerEvents = 0
         totalMasksCreated = 0
+        suppressedCount = 0
         totalProbes = 0
         probesConfirmed = 0
     }
@@ -125,7 +138,12 @@ class MaskStateMachine(
         }
 
         // 4. Yangi masklar
+        val suppress = isSuppressed
         for (d in mergeDetections(fresh)) {
+            if (suppress != null && suppress(d)) {
+                suppressedCount++
+                continue
+            }
             createMask(d.expand(config.expandFraction), now)
         }
 
@@ -232,7 +250,7 @@ class MaskStateMachine(
             flickerEvents++
             Log.w(TAG, "MILTILLASH aniqlandi (jami=$flickerEvents) rect=$rect")
         }
-        masks += Mask(
+        val mask = Mask(
             id = nextId++,
             rect = rect,
             state = MaskState.ACTIVE,
@@ -240,7 +258,9 @@ class MaskStateMachine(
             stateSinceMs = now,
             lastPositiveMs = now,
         )
+        masks += mask
         totalMasksCreated++
+        onMaskCreated?.invoke(mask)
     }
 
     private fun mergeMasks(now: Long) {

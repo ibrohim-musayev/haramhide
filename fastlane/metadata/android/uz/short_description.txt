@@ -1,0 +1,1 @@
+Ekrandagi nomaqbul tasvirlarni qurilmada aniqlab, ustiga blur qo'yadi
