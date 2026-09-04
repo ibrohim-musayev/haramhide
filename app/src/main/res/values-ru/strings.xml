@@ -71,6 +71,8 @@
     <string name="set_blur_intensity">Сила размытия: %1$d%%</string>
     <string name="set_scroll_shield">Защита при прокрутке</string>
     <string name="set_scroll_shield_why">Чтобы контент не мелькал до наложения размытия</string>
+    <string name="set_debug">Диагностический слой</string>
+    <string name="set_debug_why">Показывает измерения на экране. Только для разработки.</string>
     <string name="set_apps">Защищаемые приложения</string>
     <string name="set_apps_all">Все приложения</string>
     <string name="set_apps_count">Выбрано приложений: %1$d</string>

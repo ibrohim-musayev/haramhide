@@ -71,6 +71,8 @@
     <string name="set_blur_intensity">Blur strength: %1$d%%</string>
     <string name="set_scroll_shield">Scroll shield</string>
     <string name="set_scroll_shield_why">So content is not visible before the blur catches up</string>
+    <string name="set_debug">Diagnostic overlay</string>
+    <string name="set_debug_why">Shows metrics on screen. For development only.</string>
     <string name="set_apps">Protected apps</string>
     <string name="set_apps_all">All apps</string>
     <string name="set_apps_count">%1$d apps selected</string>

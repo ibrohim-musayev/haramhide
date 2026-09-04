@@ -20,7 +20,7 @@ ular ustiga xiralashtiruvchi qatlam chizadigan ilova.
 
 | | |
 |---|---|
-| **Tarmoqqa chiqmaydi** | `INTERNET` ruxsati manifestda umuman e'lon qilinmagan. Piksel qurilmadan chiqishi texnik jihatdan imkonsiz. |
+| **Tarmoqqa chiqmaydi** | Chiqqan APK'da `INTERNET` ruxsati yo'q — buni `aapt2 dump permissions` bilan o'zingiz tekshirishingiz mumkin. `./gradlew check` har build'da buni majburlaydi. |
 | **Server yo'q** | Hisob yo'q, telemetriya yo'q, bulut yo'q. Modellar APK ichida. |
 | **Ochiq kod** | AGPL-3.0. "Ma'lumot yig'ilmaydi" degan da'voni har kim tekshirishi mumkin. |
 | **Bepul** | Reklama, obuna, paywall yo'q. |
@@ -131,9 +131,24 @@ Kalit repozitoriyaga hech qachon qo'shilmaydi.
 
 ### Maxfiylik tekshiruvi
 
-`./gradlew check` har safar `verifyPrivacy` vazifasini bajaradi: manifestda
-tarmoq ruxsati yo'qligini va kodda piksel diskka yozadigan chaqiruv
-yo'qligini tekshiradi. Ular paydo bo'lsa build to'xtaydi.
+`./gradlew check` har safar `verifyPrivacy` vazifasini bajaradi va build'ni
+to'xtatadi, agar:
+
+* **birlashtirilgan** manifestda tarmoq ruxsati paydo bo'lsa
+* kodda piksel diskka yozadigan chaqiruv paydo bo'lsa
+
+Manba manifest emas, aynan birlashtirilgani tekshiriladi. Sabab F3 da
+amalda ko'rildi: `onnxruntime-android` o'z manifestida `INTERNET`,
+`ACCESS_NETWORK_STATE` va Microsoft telemetriya provayderini e'lon qiladi,
+va ular birlashtirishda APK'ga kirib qolgan edi. Manba manifestimizda ular
+hech qachon bo'lmagan — ya'ni faqat manbani tekshirish yolg'on xotirjamlik
+beradi. Batafsil: [F3 §1](docs/F3-NATIJALAR.md).
+
+Tekshirishning eng ishonchli yo'li — chiqqan APK:
+
+```bash
+aapt2 dump permissions app/build/outputs/apk/release/app-arm64-v8a-release-unsigned.apk
+```
 
 Ruxsatlarni ilovaning o'zidan bering, yoki test uchun:
 
@@ -183,6 +198,8 @@ Bular **hal qilinmagan** va hujjatlashtirilgan:
 | [`docs/F0-NATIJALAR.md`](docs/F0-NATIJALAR.md) | F0 — platforma cheklovlari |
 | [`docs/F1-NATIJALAR.md`](docs/F1-NATIJALAR.md) | F1 — model integratsiyasi |
 | [`docs/F2-NATIJALAR.md`](docs/F2-NATIJALAR.md) | F2 — mahsulot funksiyalari |
+| [`docs/F3-NATIJALAR.md`](docs/F3-NATIJALAR.md) | F3 — reliz tayyorgarligi |
+| [`CHANGELOG.md`](CHANGELOG.md) | O'zgarishlar tarixi |
 | [`docs/ADR-*.md`](docs/) | Arxitektura qarorlari |
 | [`NOTICE`](NOTICE) | Uchinchi tomon litsenziyalari |
 

@@ -128,6 +128,7 @@ class MainActivity : ComponentActivity() {
                 onSetBlurIntensity = { save { repo.setBlurIntensity(it) } },
                 onSetScrollShield = { save { repo.setScrollShield(it) } },
                 onSetUnblurLimit = { save { repo.setUnblurLimit(it) } },
+                onSetDebugOverlay = { save { repo.setDebugOverlay(it) } },
                 onCancelPending = { save { repo.cancelPending() } },
                 onOpenLog = { screen = Screen.LOG },
             )

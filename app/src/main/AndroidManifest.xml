@@ -10,6 +10,22 @@
       Bu qatorni qo'shishdan oldin TZ 9-bo'limini qayta o'qing.
     -->
 
+    <!--
+      ONNX Runtime (onnxruntime-android) o'z manifestida INTERNET va
+      ACCESS_NETWORK_STATE ruxsatlarini hamda telemetriya provayderini
+      e'lon qiladi. Ular manifest birlashtirilishida bizning APK'ga
+      kirib qoladi va ilovaning asosiy da'vosini buzadi.
+
+      Bu F3 da reliz APK tekshirilganda topildi — manba manifestimizda
+      ular yo'q edi, lekin CHIQQAN APK'da bor edi.
+
+      tools:node="remove" ularni birlashtirishdan chiqarib tashlaydi.
+      `verifyPrivacy` vazifasi endi BIRLASHTIRILGAN manifestni tekshiradi,
+      shuning uchun bu himoya kelajakda ham buzilmaydi.
+    -->
+    <uses-permission android:name="android.permission.INTERNET" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
@@ -77,6 +93,12 @@
           TZ FR-102: boot'da xizmat AVTOMATIK tiklanmaydi (C-01 buni taqiqlaydi).
           Faqat "Himoyani yoqish uchun bosing" bildirishnomasi chiqadi.
         -->
+        <!-- ONNX Runtime telemetriya provayderi — olib tashlanadi (yuqoriga qarang) -->
+        <provider
+            android:name="ai.onnxruntime.TelemetryInitializer"
+            android:authorities="${applicationId}.onnxruntime_telemetry_initializer"
+            tools:node="remove" />
+
         <receiver
             android:name=".BootReceiver"
             android:exported="false">

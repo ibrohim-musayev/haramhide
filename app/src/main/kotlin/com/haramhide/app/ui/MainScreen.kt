@@ -65,6 +65,7 @@ fun MainScreen(
     onSetBlurIntensity: (Int) -> Unit,
     onSetScrollShield: (Boolean) -> Unit,
     onSetUnblurLimit: (Int) -> Unit,
+    onSetDebugOverlay: (Boolean) -> Unit,
     onCancelPending: () -> Unit,
     onOpenLog: () -> Unit,
     modifier: Modifier = Modifier,
@@ -97,6 +98,7 @@ fun MainScreen(
             onSetBlurIntensity = onSetBlurIntensity,
             onSetScrollShield = onSetScrollShield,
             onSetUnblurLimit = onSetUnblurLimit,
+            onSetDebugOverlay = onSetDebugOverlay,
         )
         if (settings.debugOverlay) StatsCard(stats, context)
         Oem.hintFor()?.let { OemCard(it) }
@@ -302,6 +304,7 @@ private fun SettingsCard(
     onSetBlurIntensity: (Int) -> Unit,
     onSetScrollShield: (Boolean) -> Unit,
     onSetUnblurLimit: (Int) -> Unit,
+    onSetDebugOverlay: (Boolean) -> Unit,
 ) {
     var intensity by remember(settings.blurIntensity) {
         mutableStateOf(settings.blurIntensity.toFloat())
@@ -392,6 +395,22 @@ private fun SettingsCard(
                 valueRange = 0f..20f,
                 steps = 19,
             )
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.set_debug), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        stringResource(R.string.set_debug_why),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = settings.debugOverlay, onCheckedChange = onSetDebugOverlay)
+            }
 
             Text(stringResource(R.string.set_detector), style = MaterialTheme.typography.labelMedium)
             ChipRow(listOf("NUDENET", "HEURISTIC"), settings.detectorEngine, onSetEngine)

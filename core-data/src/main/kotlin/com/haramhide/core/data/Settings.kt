@@ -43,8 +43,14 @@ data class AppSettings(
     val shieldWhenOff: Boolean = true,
     /** Foydalanuvchi himoyani yoqishni xohlaydimi (xizmat holati emas, niyat). */
     val protectionDesired: Boolean = false,
-    /** F0 diagnostika qatlamini ko'rsatish. */
-    val debugOverlay: Boolean = true,
+    /**
+     * Diagnostika qatlami (ekranda yashil matn) va o'lchovlar kartasi.
+     *
+     * **Default FALSE.** F0/F1 da bu `true` edi — ishlab chiqish uchun qulay,
+     * lekin oddiy foydalanuvchi ekranida yashil matn chiqishi mahsulot xatosi.
+     * Kerak bo'lsa sozlamalardan yoqiladi.
+     */
+    val debugOverlay: Boolean = false,
     /** Cool-down kechikishi (ms). TZ FR-205: default 30 daqiqa. */
     val coolDownMs: Long = PendingChange.DEFAULT_COOL_DOWN_MS,
     /** Kutayotgan zaiflashtirish so'rovi, agar bo'lsa. */
@@ -75,7 +81,7 @@ class SettingsRepository(private val context: Context) {
             scrollShield = p[KEY_SCROLL_SHIELD] ?: true,
             shieldWhenOff = p[KEY_SHIELD_WHEN_OFF] ?: true,
             protectionDesired = p[KEY_PROTECTION_DESIRED] ?: false,
-            debugOverlay = p[KEY_DEBUG] ?: true,
+            debugOverlay = p[KEY_DEBUG] ?: false,
             coolDownMs = p[KEY_COOLDOWN_MS] ?: PendingChange.DEFAULT_COOL_DOWN_MS,
             pending = readPending(p),
             unblurLimitPerDay = p[KEY_UNBLUR_LIMIT] ?: 5,

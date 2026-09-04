@@ -7,6 +7,8 @@ import android.graphics.Paint
 import android.graphics.PixelFormat
 import android.graphics.Rect
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import android.util.Log
 import android.view.Gravity
@@ -25,6 +27,16 @@ class OverlayController(private val context: Context) {
 
     private val windowManager =
         context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+    /**
+     * Oyna operatsiyalari asosiy oqimda bajarilishi shart.
+     *
+     * [render] capture oqimidan chaqiriladi (ImageReader callback). U yerdan
+     * `WindowManager.addView` chaqirish View'ni o'sha oqimning Looper'iga
+     * bog'lab qo'yadi — xizmat to'xtaganda oqim o'ladi va View bilan bog'liq
+     * har qanday amal ishonchsiz bo'lib qoladi.
+     */
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     private var view: OverlayView? = null
     private var handleView: UnblurHandle? = null
@@ -80,7 +92,9 @@ class OverlayController(private val context: Context) {
     }
 
     fun detach() {
-        removeHandle()
+        mainHandler.removeCallbacksAndMessages(null)
+        if (Looper.myLooper() == Looper.getMainLooper()) removeHandle()
+        else mainHandler.post { removeHandle() }
         val v = view ?: return
         view = null
         runCatching { windowManager.removeViewImmediate(v) }
@@ -94,17 +108,20 @@ class OverlayController(private val context: Context) {
      * qoladi. Aks holda butun ekran tegishni yutib yuborardi.
      */
     private fun updateHandle(masks: List<Mask>, enabled: Boolean) {
-        if (!enabled) { removeHandle(); return }
+        if (!enabled) { postRemoveHandle(); return }
         val target = masks.filter { it.isVisible && !it.isProbing }
             .maxByOrNull { it.rect.area }
-        if (target == null) { removeHandle(); return }
+        if (target == null) { postRemoveHandle(); return }
 
         val metrics = context.resources.displayMetrics
         val size = (HANDLE_DP * metrics.density).toInt()
         val margin = (8 * metrics.density).toInt()
         val x = (target.rect.right * metrics.widthPixels).toInt() - size - margin
         val y = (target.rect.top * metrics.heightPixels).toInt() + margin
+        mainHandler.post { applyHandle(size, x, y) }
+    }
 
+    private fun applyHandle(size: Int, x: Int, y: Int) {
         val existing = handleView
         if (existing == null) {
             val h = UnblurHandle(context, unblurHoldMs) { onUnblurRequested?.invoke() }
@@ -134,6 +151,11 @@ class OverlayController(private val context: Context) {
                 runCatching { windowManager.updateViewLayout(existing, params) }
             }
         }
+    }
+
+    private fun postRemoveHandle() {
+        if (handleView == null) return
+        mainHandler.post { removeHandle() }
     }
 
     private fun removeHandle() {

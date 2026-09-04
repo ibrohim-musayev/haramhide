@@ -80,6 +80,8 @@
     <string name="set_blur_intensity">Blur kuchi: %1$d%%</string>
     <string name="set_scroll_shield">Scroll paytida himoya</string>
     <string name="set_scroll_shield_why">Tez aylantirishda kontent blur qo\'yilgunicha ko\'rinib qolmasligi uchun</string>
+    <string name="set_debug">Diagnostika qatlami</string>
+    <string name="set_debug_why">Ekranda o\'lchovlarni ko\'rsatadi. Faqat ishlab chiqish uchun.</string>
     <string name="set_apps">Himoyalanadigan ilovalar</string>
     <string name="set_apps_all">Hamma ilova</string>
     <string name="set_apps_count">%1$d ta ilova tanlangan</string>
