@@ -64,6 +64,7 @@ fun MainScreen(
     onSetBlurStyle: (String) -> Unit,
     onSetBlurIntensity: (Int) -> Unit,
     onSetScrollShield: (Boolean) -> Unit,
+    onSetMaleChest: (Boolean) -> Unit,
     onSetUnblurLimit: (Int) -> Unit,
     onSetDebugOverlay: (Boolean) -> Unit,
     onCancelPending: () -> Unit,
@@ -97,6 +98,7 @@ fun MainScreen(
             onSetBlurStyle = onSetBlurStyle,
             onSetBlurIntensity = onSetBlurIntensity,
             onSetScrollShield = onSetScrollShield,
+            onSetMaleChest = onSetMaleChest,
             onSetUnblurLimit = onSetUnblurLimit,
             onSetDebugOverlay = onSetDebugOverlay,
         )
@@ -180,6 +182,7 @@ private fun PendingCard(pending: PendingChange, onCancel: () -> Unit) {
                         PendingChange.Type.SENSITIVITY -> R.string.cooldown_sensitivity
                         PendingChange.Type.PACKAGES -> R.string.cooldown_packages
                         PendingChange.Type.ENGINE -> R.string.cooldown_engine
+                        PendingChange.Type.MALE_CHEST -> R.string.cooldown_male_chest
                     }
                 ),
                 style = MaterialTheme.typography.titleMedium,
@@ -303,6 +306,7 @@ private fun SettingsCard(
     onSetBlurStyle: (String) -> Unit,
     onSetBlurIntensity: (Int) -> Unit,
     onSetScrollShield: (Boolean) -> Unit,
+    onSetMaleChest: (Boolean) -> Unit,
     onSetUnblurLimit: (Int) -> Unit,
     onSetDebugOverlay: (Boolean) -> Unit,
 ) {
@@ -348,6 +352,25 @@ private fun SettingsCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        stringResource(R.string.set_male_chest),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Text(
+                        stringResource(R.string.set_male_chest_why),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = settings.blurMaleChest, onCheckedChange = onSetMaleChest)
+            }
 
             Text(stringResource(R.string.set_blur_style), style = MaterialTheme.typography.labelMedium)
             ChipRow(listOf("GAUSSIAN", "PIXELATE", "SOLID"), settings.blurStyle, onSetBlurStyle)

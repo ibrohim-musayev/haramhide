@@ -37,6 +37,16 @@ data class AppSettings(
     val securePolicy: String = "FAIL_OPEN",
     /** Himoyalanadigan ilovalar. Bo'sh bo'lsa — hammasi. TZ FR-204. */
     val protectedPackages: Set<String> = emptySet(),
+    /**
+     * Yalang'och erkak ko'kragini ham blur qilish.
+     *
+     * Erkak avrati (`MALE_GENITALIA_EXPOSED`) bunga BOG'LIQ EMAS —
+     * u har doim, har qanday sozlamada blur qilinadi. Bu sozlama faqat
+     * yalang'och ko'krakka tegishli (sportchi, suzuvchi, bodibilder).
+     *
+     * Default yoniq: himoyani jimgina zaiflashtirmaslik uchun.
+     */
+    val blurMaleChest: Boolean = true,
     /** TZ FR-108. */
     val scrollShield: Boolean = true,
     /** Himoya o'chiq bo'lsa himoyalangan ilovada ekranni yopish. TZ FR-103. */
@@ -78,6 +88,7 @@ class SettingsRepository(private val context: Context) {
             releasePolicy = p[KEY_RELEASE_POLICY] ?: "PROBE",
             securePolicy = p[KEY_SECURE_POLICY] ?: "FAIL_OPEN",
             protectedPackages = p[KEY_PACKAGES] ?: emptySet(),
+            blurMaleChest = p[KEY_MALE_CHEST] ?: true,
             scrollShield = p[KEY_SCROLL_SHIELD] ?: true,
             shieldWhenOff = p[KEY_SHIELD_WHEN_OFF] ?: true,
             protectionDesired = p[KEY_PROTECTION_DESIRED] ?: false,
@@ -179,6 +190,7 @@ class SettingsRepository(private val context: Context) {
             PendingChange.Type.ENGINE -> setDetectorEngine(p.value)
             PendingChange.Type.PACKAGES ->
                 setProtectedPackages(p.value.split(",").filter { it.isNotBlank() }.toSet())
+            PendingChange.Type.MALE_CHEST -> edit { it[KEY_MALE_CHEST] = p.value.toBoolean() }
             PendingChange.Type.STOP -> setProtectionDesired(false)
         }
         cancelPending()
@@ -225,6 +237,20 @@ class SettingsRepository(private val context: Context) {
     suspend fun setSecurePolicy(v: String) = edit { it[KEY_SECURE_POLICY] = v }
     suspend fun setProtectedPackages(v: Set<String>) = edit { it[KEY_PACKAGES] = v }
     suspend fun setScrollShield(v: Boolean) = edit { it[KEY_SCROLL_SHIELD] = v }
+
+    /**
+     * Erkak ko'kragi sozlamasi. O'chirish himoyani zaiflashtiradi,
+     * shuning uchun cool-down orqali o'tadi (TZ FR-205).
+     */
+    suspend fun requestBlurMaleChest(v: Boolean): Boolean {
+        val current = settings.first()
+        val weakening = !v && current.blurMaleChest
+        return if (!CoolDownPolicy.requiresCoolDown(weakening, isCommitted(current))) {
+            edit { it[KEY_MALE_CHEST] = v }; true
+        } else {
+            schedule(PendingChange.Type.MALE_CHEST, v.toString(), current.coolDownMs); false
+        }
+    }
     suspend fun setShieldWhenOff(v: Boolean) = edit { it[KEY_SHIELD_WHEN_OFF] = v }
     suspend fun setProtectionDesired(v: Boolean) = edit { it[KEY_PROTECTION_DESIRED] = v }
     suspend fun setDebugOverlay(v: Boolean) = edit { it[KEY_DEBUG] = v }
@@ -241,6 +267,7 @@ class SettingsRepository(private val context: Context) {
         val KEY_RELEASE_POLICY = stringPreferencesKey("release_policy")
         val KEY_SECURE_POLICY = stringPreferencesKey("secure_policy")
         val KEY_PACKAGES = stringSetPreferencesKey("protected_packages")
+        val KEY_MALE_CHEST = booleanPreferencesKey("blur_male_chest")
         val KEY_SCROLL_SHIELD = booleanPreferencesKey("scroll_shield")
         val KEY_SHIELD_WHEN_OFF = booleanPreferencesKey("shield_when_off")
         val KEY_PROTECTION_DESIRED = booleanPreferencesKey("protection_desired")

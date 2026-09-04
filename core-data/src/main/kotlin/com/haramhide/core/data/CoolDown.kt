@@ -29,6 +29,9 @@ data class PendingChange(
 
         /** Detektorni evristikaga (zaifroq) o'tkazish. */
         ENGINE,
+
+        /** Yalang'och erkak ko'kragini blur qilishni o'chirish. */
+        MALE_CHEST,
     }
 
     fun remainingMs(nowMs: Long = System.currentTimeMillis()): Long =

@@ -59,20 +59,42 @@ bokschi). Sabab — `MALE_BREAST_EXPOSED` klassi.
 
 **Bu belgilash qarori, aniq haqiqat emas.** Men bu kategoriyani `safe/` ga
 qo'ydim, ya'ni "blur qilinmasligi kerak". Loyiha auditoriyasi uchun aksi
-ham to'g'ri bo'lishi mumkin.
+ham to'g'ri bo'lishi mumkin — bu diniy va shaxsiy masala, texnik savol emas.
 
-Agar yalang'och erkak ko'kragi **blur qilinishi kerak** deb hisoblansa:
+Shuning uchun u **alohida sozlamaga** chiqarildi:
+`Sozlamalar → Erkak ko'kragi yopilsinmi` (`AppSettings.blurMaleChest`).
 
-| Sezgirlik | FPR (erkak_torso hisobga olinmaganda) |
+> **Erkak avrati bunga bog'liq emas.** `MALE_GENITALIA_EXPOSED` klassi
+> `EXPLICIT` ro'yxatida va har qanday sozlamada, har qanday sezgirlikda
+> blur qilinadi. Sozlama faqat yalang'och ko'krakka tegishli.
+
+### Ikki xil hisob — ular boshqa savolga javob beradi
+
+**1. Sozlamani o'chirish** (o'lchangan):
+
+| Sezgirlik | Yoniq | O'chiq |
+|---|---|---|
+| LOW | 0.008 | 0.008 |
+| MEDIUM | 0.030 | **0.025** |
+| STRICT | 0.055 | 0.051 |
+
+Farq kichik, chunki `erkak_torso` dagi ko'p rasm boshqa klasslarni ham
+qo'zg'atadi — model yalang'och erkak ko'kragini ba'zan
+`FEMALE_BREAST_EXPOSED` deb ham belgilaydi.
+
+**2. Kategoriyani `nsfw/` deb qayta belgilash** (ya'ni "ular blur
+qilinishi KERAK" deb hisoblash):
+
+| Sezgirlik | FPR |
 |---|---|
 | LOW | 0.005 |
 | MEDIUM | **0.009** |
 | STRICT | 0.019 |
 
-Ya'ni uchala sezgirlik ham mo'ljal ichida.
-
-**Bu qaror loyiha egasiniki.** Hozirgi kod `MALE_BREAST_EXPOSED` ni
-MEDIUM va STRICT da blur qiladi.
+> **Tuzatish.** Bu hujjatning oldingi versiyasida 0.009 raqami sozlamani
+> o'chirish natijasi sifatida ko'rsatilgan edi. Bu noto'g'ri: u
+> kategoriyani hisobdan chiqarish natijasi. Sozlamani o'chirish MEDIUM
+> FPR ni 0.030 dan 0.025 ga tushiradi, 0.009 ga emas.
 
 ---
 

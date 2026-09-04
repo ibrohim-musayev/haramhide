@@ -603,6 +603,7 @@ class ProtectionService : Service() {
         stateMachine.updateConfig(maskConfig)
         overlay.setProbeHoleFraction(maskConfig.probeHoleFraction)
         applyEngine(s.detectorEngine)
+        nudeNet?.blurMaleChest = s.blurMaleChest
     }
 
     /**
@@ -637,6 +638,7 @@ class ProtectionService : Service() {
                 if (nn != null && nn.isReady) {
                     nudeNet = nn
                     engineLabel = ENGINE_NUDENET
+                    nn.blurMaleChest = settings.blurMaleChest
                     TwoStageDetector(skinPrescreen, nn)
                 } else {
                     // Fail-safe: model yuklanmasa evristikaga qaytamiz, lekin

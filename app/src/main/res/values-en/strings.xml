@@ -65,10 +65,13 @@
     <string name="set_detector_heuristic">Fake detector: skin tone and texture. It does not detect explicit content — development only.</string>
     <string name="set_sensitivity">Sensitivity</string>
     <string name="set_sens_low">Explicit nudity only.</string>
-    <string name="set_sens_medium">Nudity, exposed belly, bare male chest.</string>
-    <string name="set_sens_strict">Also body parts under clothing. Many false positives.</string>
+    <string name="set_sens_medium">Explicit nudity. Bare male chest depends on the setting below.</string>
+    <string name="set_sens_strict">Also exposed belly and body parts under clothing. More false positives.</string>
     <string name="set_blur_style">Blur style</string>
     <string name="set_blur_intensity">Blur strength: %1$d%%</string>
+    <string name="set_male_chest">Blur bare male chest</string>
+    <string name="set_male_chest_why">Men with a bare chest are blurred too. Male private parts are unaffected — they are always blurred.</string>
+    <string name="cooldown_male_chest">Change to male chest setting was requested</string>
     <string name="set_scroll_shield">Scroll shield</string>
     <string name="set_scroll_shield_why">So content is not visible before the blur catches up</string>
     <string name="set_debug">Diagnostic overlay</string>

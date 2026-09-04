@@ -74,10 +74,13 @@
     <string name="set_detector_heuristic">Soxta detektor: teri rangi + tekstura. Nomaqbul kontentni aniqlamaydi, faqat ishlab chiqish uchun.</string>
     <string name="set_sensitivity">Sezgirlik</string>
     <string name="set_sens_low">Faqat aniq yalang\'ochlik.</string>
-    <string name="set_sens_medium">Yalang\'ochlik + ochiq qorin, yalang\'och erkak ko\'kragi.</string>
-    <string name="set_sens_strict">Kiyim ostidan bilinadigan qismlar ham. Ko\'p xato beradi.</string>
+    <string name="set_sens_medium">Aniq yalang\'ochlik. Erkak ko\'kragi — quyidagi sozlamaga bog\'liq.</string>
+    <string name="set_sens_strict">Qo\'shimcha: ochiq qorin va kiyim ostidan bilinadigan qismlar. Ko\'proq xato beradi.</string>
     <string name="set_blur_style">Blur uslubi</string>
     <string name="set_blur_intensity">Blur kuchi: %1$d%%</string>
+    <string name="set_male_chest">Erkak ko\'kragi yopilsinmi</string>
+    <string name="set_male_chest_why">Yalang\'och ko\'krakli erkaklar ham blur qilinadi. Erkak avrati bunga bog\'liq emas — u har doim yopiladi.</string>
+    <string name="cooldown_male_chest">Erkak ko\'kragini yopish so\'raldi</string>
     <string name="set_scroll_shield">Scroll paytida himoya</string>
     <string name="set_scroll_shield_why">Tez aylantirishda kontent blur qo\'yilgunicha ko\'rinib qolmasligi uchun</string>
     <string name="set_debug">Diagnostika qatlami</string>

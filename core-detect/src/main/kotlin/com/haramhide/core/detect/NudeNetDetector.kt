@@ -69,6 +69,13 @@ class NudeNetDetector(
     @Volatile var isReady: Boolean = false; private set
     @Volatile var loadError: String? = null; private set
 
+    /**
+     * Yalang'och erkak ko'kragini blur qilish (`MALE_BREAST_EXPOSED`).
+     * Sozlamalardan keladi. Erkak avrati bunga bog'liq emas —
+     * u har doim blur qilinadi.
+     */
+    @Volatile var blurMaleChest: Boolean = true
+
     /** Ishga tushishdagi mikro-benchmark medianasi (TZ NFR-201). */
     @Volatile var benchmarkMs: Long = -1L; private set
 
@@ -302,7 +309,7 @@ class NudeNetDetector(
                 if (v > bestScore) { bestScore = v; bestClass = c }
             }
             if (bestClass < 0 || bestScore < threshold) continue
-            if (!NudeNetLabels.isBlurred(bestClass, sensitivity)) continue
+            if (!NudeNetLabels.isBlurred(bestClass, sensitivity, blurMaleChest)) continue
 
             val cx = raw[i]
             val cy = raw[anchors + i]

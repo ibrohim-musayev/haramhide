@@ -65,10 +65,13 @@
     <string name="set_detector_heuristic">Фиктивный детектор: цвет кожи и текстура. Не распознаёт нежелательный контент, только для разработки.</string>
     <string name="set_sensitivity">Чувствительность</string>
     <string name="set_sens_low">Только явная нагота.</string>
-    <string name="set_sens_medium">Нагота, открытый живот, обнажённая мужская грудь.</string>
-    <string name="set_sens_strict">Также части тела под одеждой. Много ошибок.</string>
+    <string name="set_sens_medium">Явная нагота. Мужская грудь — зависит от настройки ниже.</string>
+    <string name="set_sens_strict">Дополнительно: открытый живот и части тела под одеждой. Больше ошибок.</string>
     <string name="set_blur_style">Стиль размытия</string>
     <string name="set_blur_intensity">Сила размытия: %1$d%%</string>
+    <string name="set_male_chest">Закрывать мужскую грудь</string>
+    <string name="set_male_chest_why">Мужчины с обнажённой грудью тоже будут размыты. Мужской аврат от этого не зависит — он закрывается всегда.</string>
+    <string name="cooldown_male_chest">Запрошено изменение для мужской груди</string>
     <string name="set_scroll_shield">Защита при прокрутке</string>
     <string name="set_scroll_shield_why">Чтобы контент не мелькал до наложения размытия</string>
     <string name="set_debug">Диагностический слой</string>

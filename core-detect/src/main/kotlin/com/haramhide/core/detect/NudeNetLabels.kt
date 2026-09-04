@@ -33,6 +33,33 @@ object NudeNetLabels {
     const val COUNT = 18
 
     /**
+     * **Erkak ko'kragi — foydalanuvchi qaroriga qoldirilgan.**
+     *
+     * Golden set o'lchovida qolgan yolg'on ijobiylarning deyarli hammasi
+     * shu klassdan chiqdi (yalang'och ko'krakli sportchi, suzuvchi,
+     * bodibilder). Lekin bu **xato emas, belgilash qarori**: erkak ko'kragi
+     * yopilishi kerakmi yoki yo'qmi — bu diniy va shaxsiy masala, texnik
+     * savol emas.
+     *
+     * Shuning uchun u alohida sozlama bilan boshqariladi
+     * (`AppSettings.blurMaleChest`), sezgirlik darajasidan mustaqil.
+     *
+     * DIQQAT: erkak avrati (`MALE_GENITALIA_EXPOSED`, indeks 14) bunga
+     * KIRMAYDI. U [EXPLICIT] ro'yxatida va har qanday sozlamada blur qilinadi.
+     *
+     * O'lchangan ta'sir (237 neytral rasm, MEDIUM):
+     *   sozlama yoniq  -> FPR 0.030
+     *   sozlama o'chiq -> FPR 0.025
+     *
+     * Farq kutilganidan kichik, chunki `erkak_torso` kategoriyasidagi ko'p
+     * rasm boshqa klasslarni ham qo'zg'atadi (model yalang'och erkak
+     * ko'kragini ba'zan `FEMALE_BREAST_EXPOSED` deb ham belgilaydi).
+     * Butun kategoriyani hisobdan chiqarish FPR ni 0.009 ga tushiradi —
+     * lekin bu boshqa savolga javob: "ular blur qilinishi KERAKMI".
+     */
+    const val MALE_BREAST_EXPOSED = 5
+
+    /**
      * **Hech qachon blur qilinmaydigan klasslar.**
      *
      * `FACE_FEMALE` va `FACE_MALE` ataylab bu yerda. TZ 8.4 da "kiyingan ayol
@@ -82,7 +109,7 @@ object NudeNetLabels {
      * bodibilderlar shu sababli blur bo'lardi.
      */
     private val PARTIAL = setOf(
-        5,   // MALE_BREAST_EXPOSED
+        MALE_BREAST_EXPOSED,
     )
 
     /**
@@ -102,9 +129,20 @@ object NudeNetLabels {
     private val MEDIUM_SET = EXPLICIT + PARTIAL
     private val STRICT_SET = EXPLICIT + PARTIAL + SUGGESTIVE
 
-    /** Berilgan sezgirlikda [classId] blur qilinadimi. */
-    fun isBlurred(classId: Int, sensitivity: Sensitivity): Boolean {
+    /**
+     * Berilgan sezgirlikda [classId] blur qilinadimi.
+     *
+     * @param blurMaleChest yalang'och erkak ko'kragini blur qilish
+     *   (`MALE_BREAST_EXPOSED`). Erkak avrati (`MALE_GENITALIA_EXPOSED`)
+     *   bunga bog'liq emas — u har doim blur qilinadi.
+     */
+    fun isBlurred(
+        classId: Int,
+        sensitivity: Sensitivity,
+        blurMaleChest: Boolean = true,
+    ): Boolean {
         if (classId in NEVER) return false
+        if (classId == MALE_BREAST_EXPOSED && !blurMaleChest) return false
         return when (sensitivity) {
             Sensitivity.LOW -> classId in LOW_SET
             Sensitivity.MEDIUM -> classId in MEDIUM_SET

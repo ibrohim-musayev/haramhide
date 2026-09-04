@@ -191,7 +191,9 @@ Batafsil yo'riqnoma: [`docs/F0-NATIJALAR.md`](docs/F0-NATIJALAR.md) 6-bo'lim.
 Kategoriya bo'yicha MEDIUM da: `bola` **0**, `oshxona` **0**, `hijob` **0**,
 `portret` **0**, `plyaj` **0**, `sport` **0**. Qolgan xatolar deyarli
 butunlay yalang'och ko'krakli erkaklar — va bu belgilash qarori, aniq
-xato emas.
+xato emas. Shuning uchun u sozlamaga chiqarilgan:
+*Erkak ko'kragi yopilsinmi*. Erkak avrati bunga bog'liq emas — u har
+qanday sozlamada blur qilinadi.
 
 **Recall hamon o'lchanmagan.** Datasetda `nsfw/` qismi yo'q, ya'ni bu
 o'lchov ilova ortiqcha blur qilmasligini ko'rsatadi, lekin haqiqiy

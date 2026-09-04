@@ -127,9 +127,14 @@ MODEL_PATH = Path(__file__).resolve().parent.parent / \
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
 
 
-def is_blurred(class_id: int, sensitivity: str) -> bool:
+MALE_BREAST_EXPOSED = 5
+
+
+def is_blurred(class_id: int, sensitivity: str, blur_male_chest: bool = True) -> bool:
     """NudeNetLabels.isBlurred bilan bir xil."""
     if class_id in NEVER:
+        return False
+    if class_id == MALE_BREAST_EXPOSED and not blur_male_chest:
         return False
     return class_id in BLUR_SETS[sensitivity]
 
@@ -241,7 +246,8 @@ def iou(a, b) -> float:
 
 
 def postprocess(raw: np.ndarray, content_w: float, content_h: float,
-                min_conf: float, sensitivity: str) -> list[dict]:
+                min_conf: float, sensitivity: str,
+                blur_male_chest: bool = True) -> list[dict]:
     """NudeNetDetector.postprocess bilan bir xil."""
     out = raw[0]                       # [22, N]
     n = out.shape[1]
@@ -260,7 +266,7 @@ def postprocess(raw: np.ndarray, content_w: float, content_h: float,
     candidates = []
     for i in idx:
         c = int(best_class[i])
-        if not is_blurred(c, sensitivity):
+        if not is_blurred(c, sensitivity, blur_male_chest):
             continue
         cx, cy, w, h = boxes[:, i]
         l = float(np.clip((cx - w / 2) / content_w, 0, 1))
@@ -310,7 +316,7 @@ def collect(root: Path) -> list[tuple[Path, bool, str]]:
 
 
 def evaluate(session, items, sensitivity: str, t_low=None, t_det=None,
-             screen: bool = True) -> list[Result]:
+             screen: bool = True, blur_male_chest: bool = True) -> list[Result]:
     low, det = THRESHOLDS[sensitivity]
     t_low = low if t_low is None else t_low
     t_det = det if t_det is None else t_det
@@ -335,7 +341,7 @@ def evaluate(session, items, sensitivity: str, t_low=None, t_det=None,
 
         tensor, cw, ch = preprocess(img)
         raw = session.run(None, {input_name: tensor})[0]
-        dets = postprocess(raw, cw, ch, t_det, sensitivity)
+        dets = postprocess(raw, cw, ch, t_det, sensitivity, blur_male_chest)
         results.append(Result(path, expected, category, a, True, dets))
     return results
 
@@ -420,6 +426,9 @@ def main() -> int:
     ap.add_argument("dataset", type=Path, help="golden set papkasi")
     ap.add_argument("--sensitivity", default="MEDIUM", choices=list(THRESHOLDS))
     ap.add_argument("--sweep", action="store_true", help="threshold sweep")
+    ap.add_argument("--no-male-chest", action="store_true",
+                    help="yalang'och erkak ko'kragini blur qilmaslik "
+                         "(AppSettings.blurMaleChest = false)")
     ap.add_argument("--raw", action="store_true",
                     help="ekran yo'lini taqlid qilmasdan, manba fayl ustida "
                          "baholash (model darajasidagi kalibratsiya)")
@@ -451,7 +460,8 @@ def main() -> int:
 
     out = {}
     for sens in (list(THRESHOLDS) if args.all else [args.sensitivity]):
-        results = evaluate(session, items, sens, screen=not args.raw)
+        results = evaluate(session, items, sens, screen=not args.raw,
+                           blur_male_chest=not args.no_male_chest)
         out[sens] = report(results, sens)
         if args.detail:
             print(f"\n  {'rasm':32} {'stageA':>7} {'darvoza':>8}  klasslar")
