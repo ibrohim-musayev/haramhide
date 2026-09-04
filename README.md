@@ -3,16 +3,23 @@
 Android ekranida real vaqtda nomaqbul tasvirlarni **qurilmaning o'zida** aniqlab,
 ular ustiga xiralashtiruvchi qatlam chizadigan ilova.
 
-> **Holat: F2 — foydalanish mumkin, lekin kalibrlanmagan.**
+> **Holat: foydalanish mumkin, lekin kalibrlanmagan va real qurilmada
+> sinalmagan.**
 >
 > Ilova haqiqiy model bilan ishlaydi (NudeNet v3, qurilmada), onboarding,
-> cool-down, ilovalar ro'yxati va uch til bor. Ammo uning **aniqligi
-> o'lchanmagan** — golden set hali yig'ilmagan, threshold qiymatlari esa
-> taxminga asoslangan. Shu sababli ilova haqida "aniqlik" da'vosi
-> qilinmasligi kerak.
+> cool-down, ilovalar ro'yxati, tap-to-unblur va uch til bor. Reliz build
+> yig'iladi va ishlaydi.
 >
-> Natijalar: [F0](docs/F0-NATIJALAR.md) (platforma) ·
-> [F1](docs/F1-NATIJALAR.md) (model) · [F2](docs/F2-NATIJALAR.md) (mahsulot)
+> Ammo uning **aniqligi o'lchanmagan** — threshold qiymatlari taxminga
+> asoslangan. Va barcha o'lchovlar emulyatorda olingan. Shu sababli ilova
+> haqida aniqlik da'vosi qilinmasligi kerak.
+>
+> Ikkala bloklovchi ham endi bajariladigan vazifa:
+> [golden set protokoli](docs/GOLDEN-SET.md) va
+> [qurilma testi ro'yxati](docs/QURILMA-TESTI.md).
+>
+> Natijalar: [F0](docs/F0-NATIJALAR.md) · [F1](docs/F1-NATIJALAR.md) ·
+> [F2](docs/F2-NATIJALAR.md) · [F3](docs/F3-NATIJALAR.md)
 
 ---
 
@@ -170,6 +177,32 @@ Batafsil yo'riqnoma: [`docs/F0-NATIJALAR.md`](docs/F0-NATIJALAR.md) 6-bo'lim.
 
 ---
 
+## Aniqlikni kalibrlash
+
+Model ishlaydi, lekin uning recall/precision qiymatlari **o'lchanmagan**.
+Buni o'lchash uchun vosita bor:
+
+```bash
+python3 -m pip install --user onnxruntime pillow numpy
+python3 tools/evaluate.py goldenset/ --all --sweep
+```
+
+Vosita Android kodidagi bilan **aynan bir xil** preprocessing qiladi va
+default holda ekran yo'lini ham taqlid qiladi:
+
+```
+foto -> ekran (1080x2400) -> capture (432x960) -> model (256x512)
+```
+
+Bu muhim: ilova hech qachon manba faylni ko'rmaydi. Farq amalda o'lchandi —
+kiyingan ayol surati STRICT rejimda manba fayl ustida yolg'on ijobiy berdi,
+ekran yo'lida esa bermadi. Va aynan ikkinchisi qurilmadagi natijaga mos keldi.
+
+To'liq protokol, huquqiy cheklovlar va qabul mezonlari:
+[`docs/GOLDEN-SET.md`](docs/GOLDEN-SET.md).
+
+---
+
 ## Ma'lum cheklovlar
 
 Bular **hal qilinmagan** va hujjatlashtirilgan:
@@ -200,6 +233,8 @@ Bular **hal qilinmagan** va hujjatlashtirilgan:
 | [`docs/F1-NATIJALAR.md`](docs/F1-NATIJALAR.md) | F1 — model integratsiyasi |
 | [`docs/F2-NATIJALAR.md`](docs/F2-NATIJALAR.md) | F2 — mahsulot funksiyalari |
 | [`docs/F3-NATIJALAR.md`](docs/F3-NATIJALAR.md) | F3 — reliz tayyorgarligi |
+| [`docs/GOLDEN-SET.md`](docs/GOLDEN-SET.md) | **Aniqlikni kalibrlash protokoli** |
+| [`docs/QURILMA-TESTI.md`](docs/QURILMA-TESTI.md) | **Real qurilma testi ro'yxati** |
 | [`CHANGELOG.md`](CHANGELOG.md) | O'zgarishlar tarixi |
 | [`docs/ADR-*.md`](docs/) | Arxitektura qarorlari |
 | [`NOTICE`](NOTICE) | Uchinchi tomon litsenziyalari |
