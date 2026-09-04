@@ -6,10 +6,12 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore("haramhide")
@@ -43,6 +45,20 @@ data class AppSettings(
     val protectionDesired: Boolean = false,
     /** F0 diagnostika qatlamini ko'rsatish. */
     val debugOverlay: Boolean = true,
+    /** Cool-down kechikishi (ms). TZ FR-205: default 30 daqiqa. */
+    val coolDownMs: Long = PendingChange.DEFAULT_COOL_DOWN_MS,
+    /** Kutayotgan zaiflashtirish so'rovi, agar bo'lsa. */
+    val pending: PendingChange? = null,
+    /** Kuniga necha marta tap-to-unblur ishlatish mumkin. TZ FR-208. */
+    val unblurLimitPerDay: Int = 5,
+    /** Bugun nechta ishlatildi (kun `unblurDay` bilan belgilanadi). */
+    val unblurUsedToday: Int = 0,
+    /** Hisoblagich qaysi kunga tegishli (epoch kun). */
+    val unblurDay: Long = 0,
+    /** Onboarding tugatilganmi (TZ FR-001 — prominent disclosure). */
+    val onboardingDone: Boolean = false,
+    /** Aniqlangan qurilma tier'i: "A" | "B" | "C". Bo'sh — hali o'lchanmagan (TZ NFR-201). */
+    val detectorTier: String? = null,
 )
 
 class SettingsRepository(private val context: Context) {
@@ -60,8 +76,140 @@ class SettingsRepository(private val context: Context) {
             shieldWhenOff = p[KEY_SHIELD_WHEN_OFF] ?: true,
             protectionDesired = p[KEY_PROTECTION_DESIRED] ?: false,
             debugOverlay = p[KEY_DEBUG] ?: true,
+            coolDownMs = p[KEY_COOLDOWN_MS] ?: PendingChange.DEFAULT_COOL_DOWN_MS,
+            pending = readPending(p),
+            unblurLimitPerDay = p[KEY_UNBLUR_LIMIT] ?: 5,
+            unblurUsedToday = p[KEY_UNBLUR_USED] ?: 0,
+            unblurDay = p[KEY_UNBLUR_DAY] ?: 0,
+            onboardingDone = p[KEY_ONBOARDING] ?: false,
+            detectorTier = p[KEY_TIER],
         )
     }
+
+    private fun readPending(p: Preferences): PendingChange? {
+        val type = p[KEY_PENDING_TYPE] ?: return null
+        val at = p[KEY_PENDING_AT] ?: return null
+        return runCatching {
+            PendingChange(PendingChange.Type.valueOf(type), p[KEY_PENDING_VALUE] ?: "", at)
+        }.getOrNull()
+    }
+
+    // ------------------------------------------------------------- cool-down
+
+    /**
+     * Sezgirlikni o'zgartirish so'rovi.
+     *
+     * Kuchaytirish darhol bajariladi. Zaiflashtirish [AppSettings.coolDownMs]
+     * kechikish bilan navbatga qo'yiladi (TZ FR-205).
+     *
+     * @return true — darhol qo'llandi; false — navbatga qo'yildi
+     */
+    suspend fun requestSensitivity(v: String): Boolean {
+        val current = settings.first()
+        val weakening = CoolDownPolicy.isSensitivityWeakening(current.sensitivity, v)
+        return if (!CoolDownPolicy.requiresCoolDown(weakening, isCommitted(current))) {
+            setSensitivity(v); true
+        } else {
+            schedule(PendingChange.Type.SENSITIVITY, v, current.coolDownMs); false
+        }
+    }
+
+    /**
+     * Cool-down faqat foydalanuvchi himoyani **yoqqan** bo'lsa ishlaydi.
+     *
+     * Tahdid modelida (TZ 1.2) raqib — irodasi zaiflashgan paytdagi
+     * foydalanuvchi. Dastlabki sozlash paytida bunday holat yo'q: odam hali
+     * himoyani yoqmagan va sozlamalarni erkin o'zgartira olishi kerak.
+     * Kechikish qaror qabul qilingandan KEYIN ma'noga ega bo'ladi.
+     */
+    private fun isCommitted(s: AppSettings): Boolean = s.protectionDesired
+
+    /**
+     * Himoyalanadigan ilovalar ro'yxatini o'zgartirish.
+     * Ro'yxatdan olib tashlash — zaiflashtirish, demak kechikish bilan.
+     */
+    suspend fun requestPackages(v: Set<String>): Boolean {
+        val current = settings.first()
+        val weakening = CoolDownPolicy.isPackagesWeakening(current.protectedPackages, v)
+        return if (!CoolDownPolicy.requiresCoolDown(weakening, isCommitted(current))) {
+            setProtectedPackages(v); true
+        } else {
+            schedule(PendingChange.Type.PACKAGES, v.joinToString(","), current.coolDownMs); false
+        }
+    }
+
+    /** Detektorni almashtirish. Evristikaga o'tish — zaiflashtirish. */
+    suspend fun requestEngine(v: String): Boolean {
+        val current = settings.first()
+        val weakening = CoolDownPolicy.isEngineWeakening(v)
+        return if (!CoolDownPolicy.requiresCoolDown(weakening, isCommitted(current))) {
+            setDetectorEngine(v); true
+        } else {
+            schedule(PendingChange.Type.ENGINE, v, current.coolDownMs); false
+        }
+    }
+
+    /** Himoyani to'xtatish so'rovi. Har doim kechikish bilan. */
+    suspend fun requestStop(): Boolean {
+        val current = settings.first()
+        schedule(PendingChange.Type.STOP, "", current.coolDownMs)
+        return false
+    }
+
+    /** Kutayotgan so'rovni bekor qilish — bu himoyani kuchaytiradi, darhol. */
+    suspend fun cancelPending() = edit {
+        it.remove(KEY_PENDING_TYPE); it.remove(KEY_PENDING_VALUE); it.remove(KEY_PENDING_AT)
+    }
+
+    /**
+     * Muddati yetgan so'rovni qo'llaydi.
+     * @return qo'llangan so'rov, yoki null
+     */
+    suspend fun applyDuePending(nowMs: Long = System.currentTimeMillis()): PendingChange? {
+        val p = settings.first().pending ?: return null
+        if (!p.isDue(nowMs)) return null
+        when (p.type) {
+            PendingChange.Type.SENSITIVITY -> setSensitivity(p.value)
+            PendingChange.Type.ENGINE -> setDetectorEngine(p.value)
+            PendingChange.Type.PACKAGES ->
+                setProtectedPackages(p.value.split(",").filter { it.isNotBlank() }.toSet())
+            PendingChange.Type.STOP -> setProtectionDesired(false)
+        }
+        cancelPending()
+        return p
+    }
+
+    private suspend fun schedule(type: PendingChange.Type, value: String, coolDownMs: Long) = edit {
+        it[KEY_PENDING_TYPE] = type.name
+        it[KEY_PENDING_VALUE] = value
+        // Mavjud so'rov bo'lsa taymer QAYTA BOSHLANMAYDI (TZ FR-205).
+        if (it[KEY_PENDING_AT] == null || it[KEY_PENDING_TYPE] != type.name) {
+            it[KEY_PENDING_AT] = System.currentTimeMillis() + coolDownMs
+        }
+    }
+
+    suspend fun setCoolDownMs(v: Long) = edit { it[KEY_COOLDOWN_MS] = v }
+
+    // ------------------------------------------------------- tap-to-unblur
+
+    /**
+     * Tap-to-unblur limitini tekshiradi va hisoblagichni oshiradi (TZ FR-208).
+     * @return true — ruxsat berildi
+     */
+    suspend fun consumeUnblur(nowMs: Long = System.currentTimeMillis()): Boolean {
+        val today = nowMs / 86_400_000L
+        val s = settings.first()
+        val used = if (s.unblurDay == today) s.unblurUsedToday else 0
+        if (used >= s.unblurLimitPerDay) return false
+        edit { it[KEY_UNBLUR_DAY] = today; it[KEY_UNBLUR_USED] = used + 1 }
+        return true
+    }
+
+    suspend fun setUnblurLimit(v: Int) = edit { it[KEY_UNBLUR_LIMIT] = v.coerceIn(0, 50) }
+
+    suspend fun setOnboardingDone(v: Boolean) = edit { it[KEY_ONBOARDING] = v }
+
+    suspend fun setDetectorTier(v: String) = edit { it[KEY_TIER] = v }
 
     suspend fun setDetectorEngine(v: String) = edit { it[KEY_ENGINE] = v }
     suspend fun setSensitivity(v: String) = edit { it[KEY_SENSITIVITY] = v }
@@ -91,5 +239,14 @@ class SettingsRepository(private val context: Context) {
         val KEY_SHIELD_WHEN_OFF = booleanPreferencesKey("shield_when_off")
         val KEY_PROTECTION_DESIRED = booleanPreferencesKey("protection_desired")
         val KEY_DEBUG = booleanPreferencesKey("debug_overlay")
+        val KEY_COOLDOWN_MS = longPreferencesKey("cooldown_ms")
+        val KEY_PENDING_TYPE = stringPreferencesKey("pending_type")
+        val KEY_PENDING_VALUE = stringPreferencesKey("pending_value")
+        val KEY_PENDING_AT = longPreferencesKey("pending_at")
+        val KEY_UNBLUR_LIMIT = intPreferencesKey("unblur_limit")
+        val KEY_UNBLUR_USED = intPreferencesKey("unblur_used")
+        val KEY_UNBLUR_DAY = longPreferencesKey("unblur_day")
+        val KEY_ONBOARDING = booleanPreferencesKey("onboarding_done")
+        val KEY_TIER = stringPreferencesKey("detector_tier")
     }
 }

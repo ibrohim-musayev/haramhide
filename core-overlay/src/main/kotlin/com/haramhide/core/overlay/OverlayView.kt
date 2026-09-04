@@ -26,6 +26,8 @@ class OverlayView(context: Context) : View(context) {
     private class Item(
         val left: Float, val top: Float, val right: Float, val bottom: Float,
         val alpha: Float,
+        /** Sinov paytida markazi ochiq qoldiriladi (ADR-007). 0 = to'liq yopiq. */
+        val holeFraction: Float,
     )
 
     private var blurBitmap: Bitmap? = null
@@ -53,6 +55,7 @@ class OverlayView(context: Context) : View(context) {
 
     private val srcRect = Rect()
     private val dstRect = RectF()
+    private val holeRect = RectF()
 
     init {
         setWillNotDraw(false)
@@ -64,6 +67,9 @@ class OverlayView(context: Context) : View(context) {
      * Yangi kadr natijasi. Fon oqimidan chaqiriladi.
      * [small] — shu chaqiruv uchun ajratilgan bitmap, View uni egallaydi.
      */
+    /** [MaskConfig.probeHoleFraction] dan keladi. */
+    var probeHoleFraction: Float = 0.45f
+
     fun submit(
         small: Bitmap?,
         masks: List<Mask>,
@@ -75,7 +81,10 @@ class OverlayView(context: Context) : View(context) {
         for (m in masks) {
             if (!m.isVisible) continue
             val r = m.rect
-            list += Item(r.left, r.top, r.right, r.bottom, m.alpha)
+            list += Item(
+                r.left, r.top, r.right, r.bottom, m.alpha,
+                holeFraction = if (m.isProbing) probeHoleFraction else 0f,
+            )
         }
         post {
             val old = blurBitmap
@@ -142,23 +151,38 @@ class OverlayView(context: Context) : View(context) {
             )
             val a = (item.alpha.coerceIn(0f, 1f) * 255).toInt()
 
+            // Sinov paytida markaz ochiq qoldiriladi (ADR-007). clipOutRect
+            // API 26 dan bor, ya'ni minSdk bilan mos.
+            val hole = item.holeFraction
+            val clipped = hole > 0f
+            if (clipped) {
+                val hw = dstRect.width() * hole / 2f
+                val hh = dstRect.height() * hole / 2f
+                val cx = dstRect.centerX()
+                val cy = dstRect.centerY()
+                holeRect.set(cx - hw, cy - hh, cx + hw, cy + hh)
+                canvas.save()
+                canvas.clipOutRect(holeRect)
+            }
+
             if (bmp == null || bmp.isRecycled || spec.style == BlurStyle.SOLID) {
                 solidPaint.alpha = a
                 canvas.drawRect(dstRect, solidPaint)
-                continue
+            } else {
+                srcRect.set(
+                    (item.left * bmp.width).toInt().coerceIn(0, bmp.width - 1),
+                    (item.top * bmp.height).toInt().coerceIn(0, bmp.height - 1),
+                    (item.right * bmp.width).toInt().coerceIn(1, bmp.width),
+                    (item.bottom * bmp.height).toInt().coerceIn(1, bmp.height),
+                )
+                if (srcRect.width() > 0 && srcRect.height() > 0) {
+                    val paint = if (spec.style == BlurStyle.PIXELATE) plainPaint else filterPaint
+                    paint.alpha = a
+                    canvas.drawBitmap(bmp, srcRect, dstRect, paint)
+                }
             }
 
-            srcRect.set(
-                (item.left * bmp.width).toInt().coerceIn(0, bmp.width - 1),
-                (item.top * bmp.height).toInt().coerceIn(0, bmp.height - 1),
-                (item.right * bmp.width).toInt().coerceIn(1, bmp.width),
-                (item.bottom * bmp.height).toInt().coerceIn(1, bmp.height),
-            )
-            if (srcRect.width() <= 0 || srcRect.height() <= 0) continue
-
-            val paint = if (spec.style == BlurStyle.PIXELATE) plainPaint else filterPaint
-            paint.alpha = a
-            canvas.drawBitmap(bmp, srcRect, dstRect, paint)
+            if (clipped) canvas.restore()
         }
     }
 

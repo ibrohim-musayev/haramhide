@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="notif_channel_protection">Protection status</string>
+    <string name="notif_channel_action">Action required</string>
+    <string name="notif_active_title">Protection active</string>
+    <string name="notif_active_text">Screen is being checked in real time</string>
+    <string name="notif_off_title">Protection off</string>
+    <string name="notif_off_text">Tap to turn on</string>
+    <string name="notif_resume_title">Protection stopped</string>
+    <string name="notif_resume_text">Screen unlocked — tap to turn it back on</string>
+    <string name="notif_boot_title">HaramHide is ready</string>
+    <string name="notif_boot_text">Tap to turn on protection</string>
+    <string name="action_stop">Stop</string>
+    <string name="action_enable">Turn on</string>
+    <string name="shield_text">Protection is off — tap the notification to turn it on</string>
+
+    <string name="ob_welcome_title">HaramHide</string>
+    <string name="ob_welcome_body">This app finds explicit images on your screen and draws a blur over them. All processing happens on your device.</string>
+
+    <string name="ob_honesty_title">The honest part first</string>
+    <string name="ob_honesty_body">This app <b>never gives a 100%% guarantee</b>. It will miss some images and it will blur others by mistake.\n\nIt is not a security tool — it is a self-control tool. If you set out to bypass it, you will succeed. The goal is friction, not prevention.</string>
+
+    <string name="ob_privacy_title">Your data</string>
+    <string name="ob_privacy_body">The app <b>has no internet access at all</b>. This is not just a promise: the INTERNET permission is not declared in the manifest, so the system technically cannot let the app reach the network.\n\nScreen images are never stored or sent anywhere. No account, no sign-up.</string>
+
+    <string name="ob_limits_title">What does not work</string>
+    <string name="ob_limits_body">Android forbids the following, and we cannot work around it:\n\n• Screen recording consent is requested every single time\n• Protection stops when the screen locks; you must turn it back on after unlocking\n• It does not work inside banking apps or password managers\n• The screen-recording indicator is always visible at the top</string>
+
+    <string name="ob_consent">I understand and agree</string>
+    <string name="ob_next">Continue</string>
+    <string name="ob_back">Back</string>
+
+    <string name="perm_title">Permissions</string>
+    <string name="perm_overlay">Display over other apps</string>
+    <string name="perm_overlay_why">To draw the blur layer</string>
+    <string name="perm_usage">Usage access</string>
+    <string name="perm_usage_why">To know which app is open</string>
+    <string name="perm_notif">Notifications</string>
+    <string name="perm_notif_why">To show protection status</string>
+    <string name="perm_battery">Ignore battery optimisation</string>
+    <string name="perm_battery_why">So the system does not kill the service (optional)</string>
+    <string name="perm_open">Open</string>
+    <string name="perm_required_hint">Grant the permissions below first</string>
+
+    <string name="status_title">Status</string>
+    <string name="status_running">Active</string>
+    <string name="status_stopped">Stopped</string>
+    <string name="status_lost">Session interrupted — turn it back on</string>
+    <string name="btn_enable">Turn on protection</string>
+    <string name="btn_stop">Stop protection</string>
+    <string name="system_note">Android asks for separate screen-recording consent every time, and the session stops automatically when the screen locks. This is a system limitation and cannot be worked around.</string>
+
+    <string name="cooldown_title">Pending</string>
+    <string name="cooldown_stop">Stopping protection was requested</string>
+    <string name="cooldown_sensitivity">Lowering sensitivity was requested</string>
+    <string name="cooldown_packages">Changing the app list was requested</string>
+    <string name="cooldown_engine">Switching the detector was requested</string>
+    <string name="cooldown_remaining">Remaining: %1$s</string>
+    <string name="cooldown_cancel">Cancel</string>
+    <string name="cooldown_explain">Changes that weaken protection take effect after a delay. This is deliberate: it puts distance between the decision and its consequence.</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="set_detector">Detector</string>
+    <string name="set_detector_nudenet">NudeNet v3 — a real model, running on device.</string>
+    <string name="set_detector_heuristic">Fake detector: skin tone and texture. It does not detect explicit content — development only.</string>
+    <string name="set_sensitivity">Sensitivity</string>
+    <string name="set_sens_low">Explicit nudity only.</string>
+    <string name="set_sens_medium">Nudity, exposed belly, bare male chest.</string>
+    <string name="set_sens_strict">Also body parts under clothing. Many false positives.</string>
+    <string name="set_blur_style">Blur style</string>
+    <string name="set_blur_intensity">Blur strength: %1$d%%</string>
+    <string name="set_scroll_shield">Scroll shield</string>
+    <string name="set_scroll_shield_why">So content is not visible before the blur catches up</string>
+    <string name="set_apps">Protected apps</string>
+    <string name="set_apps_all">All apps</string>
+    <string name="set_apps_count">%1$d apps selected</string>
+    <string name="set_unblur_limit">Daily reveal limit: %1$d</string>
+    <string name="set_unblur_why">Hold a blur for 2 seconds to reveal it for 5 seconds</string>
+    <string name="set_cooldown">Cool-down: %1$s</string>
+
+    <string name="apps_title">Protected apps</string>
+    <string name="apps_hint">Protection does not run in unchecked apps. If none are checked, it runs in all apps.</string>
+    <string name="apps_search">Search</string>
+    <string name="apps_select_defaults">Select recommended</string>
+    <string name="apps_clear">Clear all</string>
+    <string name="apps_empty">No apps found</string>
+    <string name="apps_save">Save</string>
+    <string name="apps_show_system">System apps</string>
+
+    <string name="daily_title">Today</string>
+    <string name="daily_active">Protection ran for</string>
+    <string name="daily_masks">Blurs applied</string>
+    <string name="daily_drops">Session interruptions</string>
+    <string name="daily_unblurs">Reveals used</string>
+    <string name="stats_title">Metrics</string>
+    <string name="stats_reset">Reset</string>
+    <string name="stats_test">Test pattern</string>
+
+    <string name="unblur_limit_reached">Daily reveal limit reached</string>
+
+    <string name="minutes_short">%1$d min</string>
+    <string name="seconds_short">%1$d sec</string>
+    <string name="hours_short">%1$dh %2$dm</string>
+</resources>

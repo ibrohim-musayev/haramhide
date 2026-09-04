@@ -154,7 +154,35 @@ class MaskStateMachineTest {
         // Vaqt allaqachon o'tdi, lekin kadr yetarli emas -> hali ham PROBING
         val afterOneFrame = sm.update(ctx(1000)).single()
         assertEquals(MaskState.PROBING, afterOneFrame.state)
-        assertFalse("probe kadr kutmadi", afterOneFrame.isVisible)
+        assertTrue("probe kadr kutmadi", afterOneFrame.isProbing)
+        // ADR-007: sinov paytida mask BUTUNLAY yo'qolmaydi — faqat markazi
+        // ochiladi. Shuning uchun u hamon chiziladi.
+        assertTrue("sinov paytida mask butunlay yo'qoldi", afterOneFrame.isVisible)
+    }
+
+    /**
+     * ADR-007: sinov paytida faqat markaz ochiladi. Markazdan tashqaridagi
+     * (chekkadagi) detektsiya sinovni tasdiqlashi kerak emas edi — lekin
+     * amalda u ham ijobiy dalil, chunki blur ostidan ko'rinsa kontent aniq joyida.
+     */
+    @Test
+    fun `probe markazidagi detektsiya sinovni tasdiqlaydi`() {
+        val cfg = MaskConfig(
+            releasePolicy = ReleasePolicy.PROBE,
+            holdTimeoutMs = 200,
+            probeWindowMs = 50,
+            probeFrames = 1,
+            probeHoleFraction = 0.5f,
+        )
+        val sm = MaskStateMachine(cfg)
+        sm.update(ctx(0, listOf(det)))
+        sm.update(ctx(300))                       // -> PROBING
+
+        // Mask markazidagi kichik detektsiya
+        val markaz = Detection(0.43f, 0.43f, 0.47f, 0.47f, score = 0.9f)
+        val m = sm.update(ctx(400, listOf(markaz))).single()
+        assertEquals(MaskState.ACTIVE, m.state)
+        assertEquals(1, sm.probesConfirmed)
     }
 
     @Test

@@ -38,9 +38,17 @@ class Mask(
     var probeStartFrame: Long = 0L,
     var probeCount: Int = 0,
 ) {
-    /** Ekranda ko'rinadimi. PROBING da ataylab ko'rinmaydi — sinovning mohiyati shu. */
+    /**
+     * Ekranda biror ko'rinishda chiziladimi.
+     *
+     * PROBING da mask **butunlay yo'qolmaydi** — faqat markazi ochiladi
+     * (ADR-007). Shuning uchun u ham ko'rinadigan hisoblanadi.
+     */
     val isVisible: Boolean
-        get() = state != MaskState.PROBING && state != MaskState.RELEASED && alpha > 0.01f
+        get() = state != MaskState.RELEASED && alpha > 0.01f
+
+    /** Sinov paytidami — chizishda markaz ochiq qoldiriladi. */
+    val isProbing: Boolean get() = state == MaskState.PROBING
 
     val isAlive: Boolean get() = state != MaskState.RELEASED
 }
@@ -77,6 +85,21 @@ data class MaskConfig(
 
     /** So'nish davomiyligi. */
     val fadeDurationMs: Long = 200L,
+
+    /**
+     * Sinov paytida mask markazining ochiladigan ulushi (chiziqli o'lcham).
+     *
+     * **ADR-007.** Oldin sinov paytida mask butunlay olib tashlanardi va
+     * kontent ~600 ms davomida to'liq ochiq qolardi. Endi faqat markaziy
+     * qism ochiladi: 0.45 chiziqli ulush = maydonning ~20 %.
+     *
+     * Bu detektorga yetarli signal berishi kerak (NSFW hududning markazi
+     * odatda eng ma'lumotli joyi), lekin foydalanuvchi uchun ochilish
+     * sezilarli darajada kamayadi.
+     *
+     * 0 qilib qo'yilsa eski xatti-harakat qaytadi (to'liq ochish).
+     */
+    val probeHoleFraction: Float = 0.45f,
 
     /**
      * PROBING ning MINIMAL davomiyligi.

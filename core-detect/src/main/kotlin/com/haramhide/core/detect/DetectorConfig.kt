@@ -31,5 +31,33 @@ data class DetectorConfig(
         val TIER_A = DetectorConfig(320, 640, threads = 4)
         val TIER_B = DetectorConfig(256, 512, threads = 2)
         val TIER_C = DetectorConfig(224, 448, threads = 2)
+
+        fun byName(name: String?): DetectorConfig = when (name) {
+            "A" -> TIER_A
+            "C" -> TIER_C
+            else -> TIER_B
+        }
+
+        fun nameOf(config: DetectorConfig): String = when (config) {
+            TIER_A -> "A"
+            TIER_C -> "C"
+            else -> "B"
+        }
+
+        /**
+         * **TZ NFR-201** — ishga tushishdagi mikro-benchmark asosida tier tanlash.
+         *
+         * Chegara qiymatlari [TIER_B] (256x512) da o'lchangan medianaga qarab
+         * belgilangan. Ular emulyator o'lchoviga asoslangan boshlang'ich
+         * qiymatlar va real qurilmalarda qayta ko'rilishi kerak.
+         *
+         * @param medianMs [TIER_B] konfiguratsiyasidagi mediana
+         */
+        fun pickTier(medianMs: Long): DetectorConfig = when {
+            medianMs <= 0 -> TIER_B          // o'lchov bo'lmadi
+            medianMs < 35 -> TIER_A          // tez qurilma — ko'proq aniqlik
+            medianMs < 120 -> TIER_B
+            else -> TIER_C                   // sekin qurilma — narxni tushiramiz
+        }
     }
 }

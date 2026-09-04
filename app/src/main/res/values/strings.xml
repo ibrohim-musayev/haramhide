@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">HaramHide</string>
+    <!-- Brend nomi — tarjima qilinmaydi -->
+    <string name="app_name" translatable="false">HaramHide</string>
 
+    <!-- Bildirishnomalar -->
     <string name="notif_channel_protection">Himoya holati</string>
     <string name="notif_channel_action">Harakat talab qilinadi</string>
-
     <string name="notif_active_title">Himoya faol</string>
     <string name="notif_active_text">Ekran real vaqtda tekshirilmoqda</string>
     <string name="notif_off_title">Himoya o\'chiq</string>
@@ -13,9 +14,103 @@
     <string name="notif_resume_text">Ekran qulfi ochildi — qayta yoqish uchun bosing</string>
     <string name="notif_boot_title">HaramHide tayyor</string>
     <string name="notif_boot_text">Himoyani yoqish uchun bosing</string>
-
     <string name="action_stop">To\'xtatish</string>
     <string name="action_enable">Yoqish</string>
-
     <string name="shield_text">Himoya o\'chiq — yoqish uchun bildirishnomani bosing</string>
+
+    <!-- Onboarding -->
+    <string name="ob_welcome_title">HaramHide</string>
+    <string name="ob_welcome_body">Bu ilova ekraningizda paydo bo\'ladigan nomaqbul tasvirlarni aniqlab, ular ustiga xiralashtiruvchi qatlam chizadi. Barcha ishlov qurilmangizning o\'zida bajariladi.</string>
+
+    <string name="ob_honesty_title">Avval halol gap</string>
+    <string name="ob_honesty_body">Bu ilova <b>hech qachon 100%% kafolat bermaydi</b>. U ba\'zi tasvirlarni o\'tkazib yuboradi, ba\'zilarini esa xato blur qiladi.\n\nBu xavfsizlik vositasi emas — o\'z-o\'zini nazorat vositasi. Agar uni chetlab o\'tishni istasangiz, buni albatta uddalaysiz. Maqsad — qiyinlashtirish, to\'sib qo\'yish emas.</string>
+
+    <string name="ob_privacy_title">Ma\'lumotlaringiz</string>
+    <string name="ob_privacy_body">Ilova <b>internetga umuman ulanmaydi</b>. Bu shunchaki va\'da emas: INTERNET ruxsati ilova manifestida e\'lon qilinmagan, ya\'ni tizim unga tarmoqqa chiqishga texnik imkon bermaydi.\n\nEkran tasvirlari hech qayerga saqlanmaydi va yuborilmaydi. Hisob ochish, ro\'yxatdan o\'tish, hech narsa kerak emas.</string>
+
+    <string name="ob_limits_title">Nimalar ishlamaydi</string>
+    <string name="ob_limits_body">Android quyidagilarni taqiqlaydi va biz ularni chetlab o\'ta olmaymiz:\n\n• Har safar ekran yozib olishga alohida ruxsat so\'raladi\n• Ekran qulflansa himoya to\'xtaydi, qulfni ochgach qayta yoqish kerak\n• Bank ilovalari va parol menejerlari ichida ishlamaydi\n• Ekran yuqorisida yozib olish belgisi doim ko\'rinib turadi</string>
+
+    <string name="ob_consent">Tushundim va roziman</string>
+    <string name="ob_next">Davom etish</string>
+    <string name="ob_back">Orqaga</string>
+
+    <!-- Ruxsatlar -->
+    <string name="perm_title">Ruxsatlar</string>
+    <string name="perm_overlay">Ekran ustida chizish</string>
+    <string name="perm_overlay_why">Blur qatlamini chizish uchun</string>
+    <string name="perm_usage">Foydalanish statistikasi</string>
+    <string name="perm_usage_why">Qaysi ilova ochiqligini bilish uchun</string>
+    <string name="perm_notif">Bildirishnomalar</string>
+    <string name="perm_notif_why">Himoya holatini ko\'rsatish uchun</string>
+    <string name="perm_battery">Batareya cheklovidan ozod</string>
+    <string name="perm_battery_why">Tizim xizmatni o\'ldirmasligi uchun (ixtiyoriy)</string>
+    <string name="perm_open">Ochish</string>
+    <string name="perm_required_hint">Avval quyidagi ruxsatlarni bering</string>
+
+    <!-- Asosiy ekran -->
+    <string name="status_title">Holat</string>
+    <string name="status_running">Faol</string>
+    <string name="status_stopped">To\'xtagan</string>
+    <string name="status_lost">Sessiya uzildi — qayta yoqing</string>
+    <string name="btn_enable">Himoyani yoqish</string>
+    <string name="btn_stop">Himoyani to\'xtatish</string>
+    <string name="system_note">Android har safar ekran yozib olishga alohida rozilik so\'raydi va ekran qulflansa sessiya avtomatik to\'xtaydi. Bu tizim cheklovi — chetlab o\'tib bo\'lmaydi.</string>
+
+    <!-- Cool-down -->
+    <string name="cooldown_title">Kutilmoqda</string>
+    <string name="cooldown_stop">Himoyani to\'xtatish so\'raldi</string>
+    <string name="cooldown_sensitivity">Sezgirlikni pasaytirish so\'raldi</string>
+    <string name="cooldown_packages">Ilovalar ro\'yxatini o\'zgartirish so\'raldi</string>
+    <string name="cooldown_engine">Detektorni almashtirish so\'raldi</string>
+    <string name="cooldown_remaining">Qoldi: %1$s</string>
+    <string name="cooldown_cancel">Bekor qilish</string>
+    <string name="cooldown_explain">Himoyani zaiflashtiradigan o\'zgarishlar kechikish bilan kuchga kiradi. Bu ataylab shunday: qaror bilan uning natijasi orasiga masofa qo\'yiladi.</string>
+
+    <!-- Sozlamalar -->
+    <string name="settings_title">Sozlamalar</string>
+    <string name="set_detector">Detektor</string>
+    <string name="set_detector_nudenet">NudeNet v3 — haqiqiy model, qurilmada ishlaydi.</string>
+    <string name="set_detector_heuristic">Soxta detektor: teri rangi + tekstura. Nomaqbul kontentni aniqlamaydi, faqat ishlab chiqish uchun.</string>
+    <string name="set_sensitivity">Sezgirlik</string>
+    <string name="set_sens_low">Faqat aniq yalang\'ochlik.</string>
+    <string name="set_sens_medium">Yalang\'ochlik + ochiq qorin, yalang\'och erkak ko\'kragi.</string>
+    <string name="set_sens_strict">Kiyim ostidan bilinadigan qismlar ham. Ko\'p xato beradi.</string>
+    <string name="set_blur_style">Blur uslubi</string>
+    <string name="set_blur_intensity">Blur kuchi: %1$d%%</string>
+    <string name="set_scroll_shield">Scroll paytida himoya</string>
+    <string name="set_scroll_shield_why">Tez aylantirishda kontent blur qo\'yilgunicha ko\'rinib qolmasligi uchun</string>
+    <string name="set_apps">Himoyalanadigan ilovalar</string>
+    <string name="set_apps_all">Hamma ilova</string>
+    <string name="set_apps_count">%1$d ta ilova tanlangan</string>
+    <string name="set_unblur_limit">Kunlik ochish limiti: %1$d</string>
+    <string name="set_unblur_why">Blur ustiga 2 soniya bosib turilsa, u 5 soniyaga ochiladi</string>
+    <string name="set_cooldown">Kechikish muddati: %1$s</string>
+
+    <!-- Ilovalar tanlagichi -->
+    <string name="apps_title">Himoyalanadigan ilovalar</string>
+    <string name="apps_hint">Belgilanmagan ilovalarda himoya ishlamaydi. Hech biri belgilanmasa — hamma ilovada ishlaydi.</string>
+    <string name="apps_search">Qidirish</string>
+    <string name="apps_select_defaults">Tavsiya etilganlarni tanlash</string>
+    <string name="apps_clear">Hammasini bekor qilish</string>
+    <string name="apps_empty">Ilova topilmadi</string>
+    <string name="apps_save">Saqlash</string>
+    <string name="apps_show_system">Tizim ilovalari</string>
+
+    <!-- Statistika -->
+    <string name="daily_title">Bugungi statistika</string>
+    <string name="daily_active">Himoya ishladi</string>
+    <string name="daily_masks">Blur qo\'yildi</string>
+    <string name="daily_drops">Sessiya uzildi</string>
+    <string name="daily_unblurs">Ochish ishlatildi</string>
+    <string name="stats_title">O\'lchovlar</string>
+    <string name="stats_reset">Tozalash</string>
+    <string name="stats_test">Test namunasi</string>
+
+    <string name="unblur_limit_reached">Bugungi ochish limiti tugadi</string>
+
+    <!-- Umumiy -->
+    <string name="minutes_short">%1$d daq</string>
+    <string name="seconds_short">%1$d son</string>
+    <string name="hours_short">%1$d soat %2$d daq</string>
 </resources>

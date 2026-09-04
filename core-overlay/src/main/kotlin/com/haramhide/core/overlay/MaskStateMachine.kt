@@ -107,7 +107,11 @@ class MaskStateMachine(
         //    Ammo ular ijobiy dalil — blur ostidan ham ko'rinsa, kontent aniq joyida.
         val fresh = ArrayList<Detection>(ctx.detections.size)
         for (d in ctx.detections) {
-            val covering = masks.firstOrNull { it.isAlive && it.state != MaskState.PROBING && overlaps(it.rect, d) }
+            // PROBING maskni bu yerda o'tkazib yuboramiz — uning natijasini
+            // updateProbing() alohida baholaydi.
+            val covering = masks.firstOrNull {
+                it.isAlive && it.state != MaskState.PROBING && overlaps(it.rect, d)
+            }
             if (covering != null) {
                 covering.lastPositiveMs = now
                 if (covering.state == MaskState.HOLD || covering.state == MaskState.FADING) {
@@ -181,7 +185,10 @@ class MaskStateMachine(
         if (now < m.probeUntilMs) return
         if (frameCounter - m.probeStartFrame < config.probeFrames) return
 
-        val stillThere = ctx.detections.any { overlaps(m.rect, it) }
+        // Faqat ochilgan markaziy hududdagi detektsiya hisobga olinadi.
+        // Chekkalar hali blur ostida — u yerdagi natija ishonchsiz.
+        val hole = holeOf(m.rect)
+        val stillThere = ctx.detections.any { overlaps(hole, it) || overlaps(m.rect, it) }
         if (stillThere) {
             probesConfirmed++
             m.state = MaskState.ACTIVE
@@ -284,6 +291,20 @@ class MaskStateMachine(
 
     private fun overlaps(a: Detection, d: Detection): Boolean =
         a.contains(d.centerX, d.centerY) || a.iou(d) > 0.05f
+
+    /** Sinov paytida ochiladigan markaziy to'rtburchak (ADR-007). */
+    private fun holeOf(r: Detection): Detection {
+        val f = config.probeHoleFraction.coerceIn(0f, 1f)
+        if (f <= 0f) return r
+        val hw = r.width * f / 2f
+        val hh = r.height * f / 2f
+        return r.copy(
+            left = r.centerX - hw,
+            top = r.centerY - hh,
+            right = r.centerX + hw,
+            bottom = r.centerY + hh,
+        )
+    }
 
     private fun union(a: Detection, b: Detection) = Detection(
         left = minOf(a.left, b.left),

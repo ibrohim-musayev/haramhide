@@ -29,6 +29,8 @@ import com.haramhide.core.capture.ScreenCapturer
 import com.haramhide.core.capture.SecurePolicy
 import com.haramhide.core.context.ActivePackageMonitor
 import com.haramhide.core.data.AppSettings
+import com.haramhide.core.data.DailyStatsRepository
+import com.haramhide.core.data.PendingChange
 import com.haramhide.core.data.SettingsRepository
 import com.haramhide.core.detect.DetectorConfig
 import com.haramhide.core.detect.HeuristicDetector
@@ -47,6 +49,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -77,6 +80,7 @@ class ProtectionService : Service() {
     private lateinit var overlay: OverlayController
     private lateinit var activePackages: ActivePackageMonitor
     private lateinit var settingsRepo: SettingsRepository
+    private lateinit var dailyStats: DailyStatsRepository
 
     private val signals = FrameSignals()
     private val stateMachine = MaskStateMachine()
@@ -109,6 +113,9 @@ class ProtectionService : Service() {
     @Volatile private var fps = 0f
     @Volatile private var captureSize = "-"
     @Volatile private var lastLabels: String = ""
+    /** Tap-to-unblur ochilishi shu vaqtgacha davom etadi (elapsedRealtime). */
+    @Volatile private var revealUntilMs: Long = 0L
+    @Volatile private var reportedMasks: Long = 0L
     @Volatile private var scrollingState = false
     private var scrollHighFrames = 0
     private var lastLogMs = 0L
@@ -121,6 +128,8 @@ class ProtectionService : Service() {
         overlay = OverlayController(this)
         activePackages = ActivePackageMonitor(this)
         settingsRepo = SettingsRepository(applicationContext)
+        dailyStats = DailyStatsRepository(applicationContext)
+        overlay.onUnblurRequested = ::onUnblurRequested
 
         captureThread = HandlerThread("haramhide-capture", android.os.Process.THREAD_PRIORITY_DISPLAY)
         captureThread.start()
@@ -143,6 +152,7 @@ class ProtectionService : Service() {
         )
 
         displayManager().registerDisplayListener(displayListener, mainHandler)
+        mainHandler.post(pendingWatcher)
         Log.i(TAG, "Xizmat yaratildi")
     }
 
@@ -184,8 +194,19 @@ class ProtectionService : Service() {
             }
 
             ACTION_STOP -> {
-                scope.launchSet { settingsRepo.setProtectionDesired(false) }
-                stopSelfSafely()
+                // TZ FR-205: to'xtatish darhol bajarilmaydi. So'rov navbatga
+                // qo'yiladi va faqat muddati yetganda kuchga kiradi.
+                scope.launch {
+                    val due = settingsRepo.applyDuePending()
+                    if (due?.type == PendingChange.Type.STOP) {
+                        stopSelfSafely()
+                    } else {
+                        settingsRepo.requestStop()
+                        val p = settingsRepo.settings.first().pending
+                        Log.i(TAG, "To'xtatish so'raldi, qoldi=${p?.remainingMs()}ms")
+                        updateNotification(running = projection != null)
+                    }
+                }
             }
 
             null -> {
@@ -317,6 +338,7 @@ class ProtectionService : Service() {
         ) return
 
         sessionLostCount++
+        scope.launchSet { dailyStats.addSessionDrop() }
         stopSessionInternal(lost = true)
         ProtectionState.setStatus(ProtectionState.Status.SESSION_LOST)
         updateNotification(running = false)
@@ -396,12 +418,16 @@ class ProtectionService : Service() {
         )
 
         // --- Render
+        // Tap-to-unblur davomida masklar chizilmaydi, lekin holat mashinasi
+        // ishlashda davom etadi — ochilish tugagach mask joyida qoladi.
+        val revealed = SystemClock.elapsedRealtime() < revealUntilMs
         overlay.render(
             frame = frame,
-            masks = masks,
+            masks = if (revealed) emptyList() else masks,
             spec = blurSpec(s),
-            scrollShield = s.scrollShield && scrolling,
+            scrollShield = s.scrollShield && scrolling && !revealed,
             debugText = debugText(s, globalDelta.toFloat(), pkg ?: "?"),
+            showUnblurHandle = !revealed && s.unblurLimitPerDay > 0 && masks.any { it.isVisible },
         )
 
         signals.commit()
@@ -453,8 +479,18 @@ class ProtectionService : Service() {
             publishStats()
         }
         if (nowMs - lastLogMs >= METRIC_LOG_INTERVAL_MS) {
+            val elapsedSec = if (lastLogMs == 0L) 0L else (nowMs - lastLogMs) / 1000
             lastLogMs = nowMs
             logMetrics()
+            // TZ FR-305: lokal kunlik statistika
+            val newMasks = stateMachine.totalMasksCreated - reportedMasks
+            reportedMasks = stateMachine.totalMasksCreated
+            if (elapsedSec > 0 || newMasks > 0) {
+                scope.launchSet {
+                    if (elapsedSec > 0) dailyStats.addActiveSeconds(elapsedSec)
+                    if (newMasks > 0) dailyStats.addMasks(newMasks)
+                }
+            }
         }
     }
 
@@ -535,9 +571,9 @@ class ProtectionService : Service() {
     // ------------------------------------------------------------------ settings
 
     private fun applySettings(s: AppSettings) {
-        stateMachine.updateConfig(
-            MaskConfig(releasePolicy = parseReleasePolicy(s.releasePolicy))
-        )
+        val maskConfig = MaskConfig(releasePolicy = parseReleasePolicy(s.releasePolicy))
+        stateMachine.updateConfig(maskConfig)
+        overlay.setProbeHoleFraction(maskConfig.probeHoleFraction)
         applyEngine(s.detectorEngine)
     }
 
@@ -555,8 +591,18 @@ class ProtectionService : Service() {
         captureHandler.post {
             detector = if (engine == ENGINE_NUDENET) {
                 val nn = nudeNet ?: runCatching {
-                    // Capture Tier B da ishlaydi (CaptureConfig.TIER_B) — detektor ham shunga mos.
-                    NudeNetDetector(applicationContext, DetectorConfig.TIER_B)
+                    // TZ NFR-201: tier saqlangan bo'lsa ishlatamiz, bo'lmasa
+                    // TIER_B bilan boshlab, benchmark natijasidan tier tanlaymiz.
+                    val stored = settings.detectorTier
+                    val cfg = DetectorConfig.byName(stored)
+                    NudeNetDetector(applicationContext, cfg).also { d ->
+                        if (stored == null && d.benchmarkMs > 0) {
+                            val picked = DetectorConfig.pickTier(d.benchmarkMs)
+                            val name = DetectorConfig.nameOf(picked)
+                            Log.i(TAG, "Tier aniqlandi: $name (benchmark=${d.benchmarkMs}ms)")
+                            scope.launchSet { settingsRepo.setDetectorTier(name) }
+                        }
+                    }
                 }
                     .onFailure { Log.e(TAG, "NudeNet yuklanmadi", it) }
                     .getOrNull()
@@ -637,6 +683,48 @@ class ProtectionService : Service() {
     }
 
     private val shieldWatcher = Runnable { updateShieldForCurrentApp() }
+
+    /**
+     * **TZ FR-208 — tap-to-unblur.**
+     *
+     * Kunlik limit tugagan bo'lsa hech narsa bo'lmaydi (foydalanuvchiga
+     * xabar beriladi). Bu "bosim klapani": to'liq taqiq odamni ilovani
+     * butunlay o'chirishga undaydi, cheklangan ruxsat esa undamaydi.
+     */
+    private fun onUnblurRequested() {
+        scope.launch {
+            val granted = runCatching { settingsRepo.consumeUnblur() }.getOrDefault(false)
+            if (granted) {
+                revealUntilMs = SystemClock.elapsedRealtime() + REVEAL_DURATION_MS
+                dailyStats.addUnblur()
+                Log.i(TAG, "Ochish berildi, ${REVEAL_DURATION_MS}ms")
+            } else {
+                Log.i(TAG, "Ochish limiti tugagan")
+                android.widget.Toast.makeText(
+                    this@ProtectionService,
+                    getString(R.string.unblur_limit_reached),
+                    android.widget.Toast.LENGTH_SHORT,
+                ).show()
+            }
+        }
+    }
+
+    /**
+     * Kutayotgan cool-down so'rovini kuzatadi (TZ FR-205).
+     * Muddati yetganda so'rov qo'llanadi; STOP bo'lsa xizmat to'xtaydi.
+     */
+    private val pendingWatcher = object : Runnable {
+        override fun run() {
+            scope.launch {
+                val applied = runCatching { settingsRepo.applyDuePending() }.getOrNull()
+                if (applied != null) {
+                    Log.i(TAG, "Cool-down tugadi, qo'llandi: ${applied.type}")
+                    if (applied.type == PendingChange.Type.STOP) stopSelfSafely()
+                }
+            }
+            mainHandler.postDelayed(this, PENDING_POLL_MS)
+        }
+    }
 
     /**
      * `ACTION_USER_PRESENT` manifestdan qabul qilinmaydi (Android 8+ implicit
@@ -753,6 +841,12 @@ class ProtectionService : Service() {
         const val ENGINE_NUDENET = "NUDENET"
         const val ENGINE_HEURISTIC = "HEURISTIC"
         private const val SHIELD_POLL_MS = 1_000L
+
+        /** Cool-down tekshiruvi oralig'i. Aniqlik soniya darajasida yetarli. */
+        private const val PENDING_POLL_MS = 10_000L
+
+        /** Tap-to-unblur ochilish davomiyligi. TZ FR-208: 5 soniya. */
+        private const val REVEAL_DURATION_MS = 5_000L
 
         fun startSession(context: Context, resultCode: Int, data: Intent) {
             val intent = Intent(context, ProtectionService::class.java)

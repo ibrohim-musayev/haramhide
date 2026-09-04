@@ -3,13 +3,16 @@
 Android ekranida real vaqtda nomaqbul tasvirlarni **qurilmaning o'zida** aniqlab,
 ular ustiga xiralashtiruvchi qatlam chizadigan ilova.
 
-> **Holat: F1 — model integratsiyasi.** Ilova endi haqiqiy model bilan ishlaydi
-> (NudeNet v3, on-device), lekin **aniqligi kalibrlanmagan** — golden set hali
-> yig'ilmagan. Ya'ni u ishlaydi, ammo uning recall/precision qiymatlari
-> o'lchanmagan va ilova haqida "aniqlik" da'vosi qilinmasligi kerak.
+> **Holat: F2 — foydalanish mumkin, lekin kalibrlanmagan.**
 >
-> Natijalar: [`docs/F0-NATIJALAR.md`](docs/F0-NATIJALAR.md) (platforma cheklovlari) ·
-> [`docs/F1-NATIJALAR.md`](docs/F1-NATIJALAR.md) (model)
+> Ilova haqiqiy model bilan ishlaydi (NudeNet v3, qurilmada), onboarding,
+> cool-down, ilovalar ro'yxati va uch til bor. Ammo uning **aniqligi
+> o'lchanmagan** — golden set hali yig'ilmagan, threshold qiymatlari esa
+> taxminga asoslangan. Shu sababli ilova haqida "aniqlik" da'vosi
+> qilinmasligi kerak.
+>
+> Natijalar: [F0](docs/F0-NATIJALAR.md) (platforma) ·
+> [F1](docs/F1-NATIJALAR.md) (model) · [F2](docs/F2-NATIJALAR.md) (mahsulot)
 
 ---
 
@@ -53,6 +56,17 @@ MediaProjection → VirtualDisplay → ImageReader
 | `:core-context` | UsageStats orqali faol paketni aniqlash |
 | `:core-data` | DataStore sozlamalari |
 | `:app` | UI (Compose), foreground xizmat, bildirishnomalar |
+
+### Mahsulot funksiyalari
+
+| | |
+|---|---|
+| Onboarding | 4 sahifa — nima ishlaydi, nima ishlamaydi, ma'lumot qayerga ketmaydi |
+| **Cool-down** | Himoyani zaiflashtiradigan har qanday o'zgarish 30 daqiqa kechikadi. Taymer qayta bosilganda **nolga tushmaydi** |
+| Ilovalar ro'yxati | Qidiruv va tavsiyalar bilan. Bo'sh = hamma ilova |
+| Tap-to-unblur | Mask burchagidagi tugmani 2 s bosib tursangiz 5 s ochiladi. Kunlik limit bor |
+| Kunlik statistika | Faqat qurilmada. Himoya vaqti, blur soni, sessiya uzilishlari |
+| Tillar | O'zbek, rus, ingliz |
 
 ### Model
 
@@ -132,8 +146,8 @@ Bular **hal qilinmagan** va hujjatlashtirilgan:
   qulflansa uzatish to'xtaydi. Qulf ochilgach bir bosishlik tiklash so'raladi.
 * **FLAG_SECURE oynalari.** Bank ilovalari, parol menejerlari qora kadr beradi —
   ularni himoyalab bo'lmaydi.
-* **Probe oynasi ~600 ms.** Mask timeout'dan keyin kontent qisqa vaqt ochiq
-  qoladi. Yechim izlanmoqda ([ADR-003](docs/ADR-003-mask-boshatish.md)).
+* **Probe paytida mask markazi ochiladi** (~20 % maydon). Bu F1 dagi to'liq
+  ochilishdan yaxshi, lekin nol emas ([ADR-007](docs/F2-NATIJALAR.md)).
 * **Real qurilmada sinalmagan.** Barcha o'lchovlar emulyatorda olingan.
 * **Aniqlik kalibrlanmagan.** Threshold qiymatlari — o'lchovga emas, taxminga
   asoslangan boshlang'ich qiymatlar. Golden set yig'ilmaguncha ilova haqida
@@ -150,6 +164,7 @@ Bular **hal qilinmagan** va hujjatlashtirilgan:
 | [`TZ_v2.1_HaramHide.md`](TZ_v2.1_HaramHide.md) | Texnik topshiriq (SRS) |
 | [`docs/F0-NATIJALAR.md`](docs/F0-NATIJALAR.md) | F0 — platforma cheklovlari |
 | [`docs/F1-NATIJALAR.md`](docs/F1-NATIJALAR.md) | F1 — model integratsiyasi |
+| [`docs/F2-NATIJALAR.md`](docs/F2-NATIJALAR.md) | F2 — mahsulot funksiyalari |
 | [`docs/ADR-*.md`](docs/) | Arxitektura qarorlari |
 | [`NOTICE`](NOTICE) | Uchinchi tomon litsenziyalari |
 
