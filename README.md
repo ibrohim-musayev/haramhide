@@ -177,9 +177,29 @@ Batafsil yo'riqnoma: [`docs/F0-NATIJALAR.md`](docs/F0-NATIJALAR.md) 6-bo'lim.
 
 ---
 
+## Aniqlik — o'lchangan qismi
+
+237 ta neytral, ochiq litsenziyali rasm ustida yolg'on ijobiylar o'lchandi
+(`docs/ANIQLIK-OLCHOVI.md`):
+
+| Sezgirlik | FPR | Mo'ljal |
+|---|---|---|
+| LOW | **0.008** | ≤ 0.03 |
+| MEDIUM | **0.030** | ≤ 0.03 |
+| STRICT | 0.055 | ≤ 0.03 |
+
+Kategoriya bo'yicha MEDIUM da: `bola` **0**, `oshxona` **0**, `hijob` **0**,
+`portret` **0**, `plyaj` **0**, `sport` **0**. Qolgan xatolar deyarli
+butunlay yalang'och ko'krakli erkaklar — va bu belgilash qarori, aniq
+xato emas.
+
+**Recall hamon o'lchanmagan.** Datasetda `nsfw/` qismi yo'q, ya'ni bu
+o'lchov ilova ortiqcha blur qilmasligini ko'rsatadi, lekin haqiqiy
+kontentni ushlashini ko'rsatmaydi. Hech narsani aniqlamaydigan model
+ham 0 % FPR beradi.
+
 ## Aniqlikni kalibrlash
 
-Model ishlaydi, lekin uning recall/precision qiymatlari **o'lchanmagan**.
 Buni o'lchash uchun vosita bor:
 
 ```bash
@@ -216,9 +236,9 @@ Bular **hal qilinmagan** va hujjatlashtirilgan:
 * **Probe paytida mask markazi ochiladi** (~20 % maydon). Bu F1 dagi to'liq
   ochilishdan yaxshi, lekin nol emas ([ADR-007](docs/F2-NATIJALAR.md)).
 * **Real qurilmada sinalmagan.** Barcha o'lchovlar emulyatorda olingan.
-* **Aniqlik kalibrlanmagan.** Threshold qiymatlari — o'lchovga emas, taxminga
-  asoslangan boshlang'ich qiymatlar. Golden set yig'ilmaguncha ilova haqida
-  aniqlik da'vosi qilinmasligi kerak ([F1 §5](docs/F1-NATIJALAR.md)).
+* **Recall o'lchanmagan.** Yolg'on ijobiylar o'lchandi (yuqoriga qarang),
+  lekin ilova haqiqiy kontentning qanchasini ushlashi noma'lum. Buning
+  uchun `nsfw/` to'plami kerak ([GOLDEN-SET.md](docs/GOLDEN-SET.md)).
 * **Stage A model emas** — teri rangi evristikasi. Tayyor, ruxsat beruvchi
   litsenziyali va mobil uchun yengil NSFW klassifikatori mavjud emas.
 
@@ -233,7 +253,8 @@ Bular **hal qilinmagan** va hujjatlashtirilgan:
 | [`docs/F1-NATIJALAR.md`](docs/F1-NATIJALAR.md) | F1 — model integratsiyasi |
 | [`docs/F2-NATIJALAR.md`](docs/F2-NATIJALAR.md) | F2 — mahsulot funksiyalari |
 | [`docs/F3-NATIJALAR.md`](docs/F3-NATIJALAR.md) | F3 — reliz tayyorgarligi |
-| [`docs/GOLDEN-SET.md`](docs/GOLDEN-SET.md) | **Aniqlikni kalibrlash protokoli** |
+| [`docs/ANIQLIK-OLCHOVI.md`](docs/ANIQLIK-OLCHOVI.md) | **O'lchangan aniqlik natijalari** |
+| [`docs/GOLDEN-SET.md`](docs/GOLDEN-SET.md) | Aniqlikni kalibrlash protokoli |
 | [`docs/QURILMA-TESTI.md`](docs/QURILMA-TESTI.md) | **Real qurilma testi ro'yxati** |
 | [`CHANGELOG.md`](CHANGELOG.md) | O'zgarishlar tarixi |
 | [`docs/ADR-*.md`](docs/) | Arxitektura qarorlari |

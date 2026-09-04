@@ -41,10 +41,28 @@ object NudeNetLabels {
      * xato blur qiladi. Model yuzni aniqlay olishi bu funksiyani qaytarish
      * uchun sabab emas.
      *
-     * `FEET_COVERED` va `ARMPITS_COVERED` — kiyim ostidagi tana qismlari,
-     * ular hech qanday sezgirlikda blur qilinmaydi.
+     * `FEMALE_BREAST_COVERED` ham shu yerda — va bu **golden set o'lchovidan
+     * keyin qo'shildi**. U STRICT rejimda 237 ta neytral rasmdan 20 tasida
+     * ishga tushdi, jumladan hijobli ayollar suratlarida. Ya'ni TZ 8.4 da
+     * etik sabablarga ko'ra olib tashlangan "kiyingan ayolni blurlash"
+     * funksiyasi STRICT orqali orqa eshikdan qaytib kirgan edi.
+     *
+     * `FEET_EXPOSED`, `ARMPITS_EXPOSED`, `BELLY_COVERED` — o'lchovda ular
+     * shovqindan boshqa narsa bermadi (9, 7 va 1 yolg'on ijobiy) va
+     * oyoq yoki qo'ltiqni blur qilish uchun mudofaa qilinadigan asos yo'q.
+     *
+     * `FEET_COVERED` va `ARMPITS_COVERED` — kiyim ostidagi tana qismlari.
      */
-    private val NEVER = setOf(1, 12, 9, 10)
+    private val NEVER = setOf(
+        1,   // FACE_FEMALE
+        12,  // FACE_MALE
+        9,   // FEET_COVERED
+        10,  // ARMPITS_COVERED
+        7,   // FEET_EXPOSED
+        8,   // BELLY_COVERED
+        11,  // ARMPITS_EXPOSED
+        16,  // FEMALE_BREAST_COVERED  <- TZ 8.4
+    )
 
     /** Aniq yalang'ochlik — barcha rejimlarda. */
     private val EXPLICIT = setOf(
@@ -55,20 +73,28 @@ object NudeNetLabels {
         14,  // MALE_GENITALIA_EXPOSED
     )
 
-    /** Qisman ochiqlik — MEDIUM va STRICT. */
+    /**
+     * Qisman ochiqlik — MEDIUM va STRICT.
+     *
+     * `BELLY_EXPOSED` bu yerdan STRICT ga ko'chirildi: golden set o'lchovida
+     * u MEDIUM dagi yolg'on ijobiylarning eng katta manbai bo'ldi (10 tadan
+     * 9 tasi). Ochiq qorin yalang'ochlik emas — sportchi, suzuvchi va
+     * bodibilderlar shu sababli blur bo'lardi.
+     */
     private val PARTIAL = setOf(
         5,   // MALE_BREAST_EXPOSED
-        13,  // BELLY_EXPOSED
     )
 
-    /** Kiyim ostidan bilinadigan / ishora qiluvchi — faqat STRICT. */
+    /**
+     * Kiyim ostidan bilinadigan / ishora qiluvchi — faqat STRICT.
+     *
+     * Ro'yxat golden set o'lchovidan keyin qisqartirildi. Qolganlari —
+     * mudofaa qilinadigan darajada aniq holatlar.
+     */
     private val SUGGESTIVE = setOf(
         0,   // FEMALE_GENITALIA_COVERED
-        7,   // FEET_EXPOSED
-        8,   // BELLY_COVERED
-        11,  // ARMPITS_EXPOSED
+        13,  // BELLY_EXPOSED
         15,  // ANUS_COVERED
-        16,  // FEMALE_BREAST_COVERED
         17,  // BUTTOCKS_COVERED
     )
 

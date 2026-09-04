@@ -92,10 +92,11 @@ LABELS = [
     "BUTTOCKS_COVERED",          # 17
 ]
 
-NEVER = {1, 12, 9, 10}                       # yuzlar, kiyim ostidagi oyoq/qo'ltiq
+# NudeNetLabels.kt bilan sinxron. Golden set o'lchovidan keyin qayta taqsimlangan.
+NEVER = {1, 12, 9, 10, 7, 8, 11, 16}
 EXPLICIT = {2, 3, 4, 6, 14}
-PARTIAL = {5, 13}
-SUGGESTIVE = {0, 7, 8, 11, 15, 16, 17}
+PARTIAL = {5}
+SUGGESTIVE = {0, 13, 15, 17}
 
 BLUR_SETS = {
     "LOW": EXPLICIT,

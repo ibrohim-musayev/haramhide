@@ -10,4 +10,8 @@ captures/
 *.apk
 *.keystore
 !debug.keystore
+# Golden set rasmlari HECH QACHON commit qilinmaydi (TZ 8.6).
 /goldenset/
+# Manifest — istisno: unda rasm yo'q, faqat manba URL va litsenziya.
+# CC BY atributsiyasi va o'lchovni takrorlash uchun kerak.
+!/goldenset/manifest.json
