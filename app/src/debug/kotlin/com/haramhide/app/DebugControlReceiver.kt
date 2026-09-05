@@ -31,6 +31,9 @@ class DebugControlReceiver : BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                intent.getStringExtra("tier")?.let {
+                    repo.setForcedTier(it); Log.i(TAG, "forcedTier=$it")
+                }
                 intent.getStringExtra("engine")?.let {
                     repo.setDetectorEngine(it); Log.i(TAG, "engine=$it")
                 }

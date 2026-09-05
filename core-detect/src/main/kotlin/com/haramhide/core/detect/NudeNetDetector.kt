@@ -76,6 +76,15 @@ class NudeNetDetector(
      */
     @Volatile var blurMaleChest: Boolean = true
 
+    /**
+     * Diagnostika: chegaradan QAT'I NAZAR eng yuqori 3 ta klass.
+     *
+     * "Model hech narsa ko'rmayapti" va "model ko'ryapti, lekin chegaradan
+     * past" — bular butunlay boshqa muammolar va ularni faqat shu ma'lumot
+     * ajratadi. Metrikada `top=` sifatida chiqadi.
+     */
+    @Volatile var lastTopClasses: String = ""; private set
+
     /** Ishga tushishdagi mikro-benchmark medianasi (TZ NFR-201). */
     @Volatile var benchmarkMs: Long = -1L; private set
 
@@ -297,6 +306,22 @@ class NudeNetDetector(
         sensitivity: Sensitivity,
     ): List<Detection> {
         if (anchors <= 0 || contentW <= 0f || contentH <= 0f) return emptyList()
+
+        // Diagnostika: har bir klass bo'yicha eng yuqori ball (chegarasiz)
+        val perClassMax = FloatArray(NudeNetLabels.COUNT)
+        for (c in 0 until NudeNetLabels.COUNT) {
+            var best = 0f
+            val base = (4 + c) * anchors
+            for (i in 0 until anchors) {
+                val v = raw[base + i]
+                if (v > best) best = v
+            }
+            perClassMax[c] = best
+        }
+        lastTopClasses = perClassMax.indices
+            .sortedByDescending { perClassMax[it] }
+            .take(3)
+            .joinToString(",") { "${NudeNetLabels.nameOf(it)}=%.2f".format(perClassMax[it]) }
 
         val threshold = minConfidence.coerceAtLeast(MIN_SCORE)
         val candidates = ArrayList<Detection>(16)

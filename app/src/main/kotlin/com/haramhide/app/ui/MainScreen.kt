@@ -65,6 +65,8 @@ fun MainScreen(
     onSetBlurIntensity: (Int) -> Unit,
     onSetScrollShield: (Boolean) -> Unit,
     onSetMaleChest: (Boolean) -> Unit,
+    onSetRevealing: (Boolean) -> Unit,
+    onSetRevealingThreshold: (Int) -> Unit,
     onSetUnblurLimit: (Int) -> Unit,
     onSetDebugOverlay: (Boolean) -> Unit,
     onCancelPending: () -> Unit,
@@ -99,6 +101,8 @@ fun MainScreen(
             onSetBlurIntensity = onSetBlurIntensity,
             onSetScrollShield = onSetScrollShield,
             onSetMaleChest = onSetMaleChest,
+            onSetRevealing = onSetRevealing,
+            onSetRevealingThreshold = onSetRevealingThreshold,
             onSetUnblurLimit = onSetUnblurLimit,
             onSetDebugOverlay = onSetDebugOverlay,
         )
@@ -183,6 +187,7 @@ private fun PendingCard(pending: PendingChange, onCancel: () -> Unit) {
                         PendingChange.Type.PACKAGES -> R.string.cooldown_packages
                         PendingChange.Type.ENGINE -> R.string.cooldown_engine
                         PendingChange.Type.MALE_CHEST -> R.string.cooldown_male_chest
+                        PendingChange.Type.REVEALING -> R.string.cooldown_revealing
                     }
                 ),
                 style = MaterialTheme.typography.titleMedium,
@@ -307,9 +312,14 @@ private fun SettingsCard(
     onSetBlurIntensity: (Int) -> Unit,
     onSetScrollShield: (Boolean) -> Unit,
     onSetMaleChest: (Boolean) -> Unit,
+    onSetRevealing: (Boolean) -> Unit,
+    onSetRevealingThreshold: (Int) -> Unit,
     onSetUnblurLimit: (Int) -> Unit,
     onSetDebugOverlay: (Boolean) -> Unit,
 ) {
+    var revealingT by remember(settings.revealingThreshold) {
+        mutableStateOf(settings.revealingThreshold.toFloat())
+    }
     var intensity by remember(settings.blurIntensity) {
         mutableStateOf(settings.blurIntensity.toFloat())
     }
@@ -352,6 +362,39 @@ private fun SettingsCard(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.set_revealing), style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        stringResource(R.string.set_revealing_why),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Switch(checked = settings.blurRevealingClothes, onCheckedChange = onSetRevealing)
+            }
+            if (settings.blurRevealingClothes) {
+                Text(
+                    stringResource(R.string.set_revealing_threshold, revealingT.toInt()),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+                Slider(
+                    value = revealingT,
+                    onValueChange = { revealingT = it },
+                    onValueChangeFinished = { onSetRevealingThreshold(revealingT.toInt()) },
+                    valueRange = 10f..60f,
+                )
+                Text(
+                    stringResource(R.string.set_revealing_hint),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
 
             Row(
                 Modifier.fillMaxWidth(),

@@ -36,6 +36,7 @@ import com.haramhide.core.data.SettingsRepository
 import com.haramhide.core.detect.DetectorConfig
 import com.haramhide.core.detect.HeuristicDetector
 import com.haramhide.core.detect.NudeNetDetector
+import com.haramhide.core.detect.SkinExposureDetector
 import com.haramhide.core.detect.SkinPrescreen
 import com.haramhide.core.detect.Sensitivity
 import com.haramhide.core.detect.TwoStageDetector
@@ -94,6 +95,7 @@ class ProtectionService : Service() {
     // F1: arzon darvoza + haqiqiy model
     private val skinPrescreen = SkinPrescreen()
     private var nudeNet: NudeNetDetector? = null
+    private var skinExposure: SkinExposureDetector? = null
 
     @Volatile private var detector = TwoStageDetector(heuristic, heuristic)
     @Volatile private var currentEngine: String? = null
@@ -121,6 +123,7 @@ class ProtectionService : Service() {
     @Volatile private var reportedMasks: Long = 0L
     @Volatile private var scrollingState = false
     private var scrollHighFrames = 0
+    private var scrollStartedAtMs = 0L
     private var lastLogMs = 0L
 
     // ---------------------------------------------------------------- lifecycle
@@ -162,6 +165,13 @@ class ProtectionService : Service() {
         captureThread = HandlerThread("haramhide-capture", android.os.Process.THREAD_PRIORITY_DISPLAY)
         captureThread.start()
         captureHandler = Handler(captureThread.looper)
+
+        // Sozlamalarni BLOKLAB o'qiymiz: sessiya ular yuklanishidan oldin
+        // boshlansa, capture noto'g'ri tier bilan quriladi (real qurilmada
+        // kuzatildi: forcedTier=A bo'lsa ham capture 960px qoldi).
+        runCatching {
+            kotlinx.coroutines.runBlocking { settings = settingsRepo.settings.first() }
+        }.onFailure { Log.w(TAG, "Sozlamalarni o'qib bo'lmadi: $it") }
 
         settingsRepo.settings
             .onEach { s ->
@@ -285,6 +295,8 @@ class ProtectionService : Service() {
         detector.close()
         nudeNet?.close()
         nudeNet = null
+        skinExposure?.close()
+        skinExposure = null
         scope.cancel()
         captureThread.quitSafely()
         ProtectionState.setStatus(ProtectionState.Status.STOPPED)
@@ -325,9 +337,15 @@ class ProtectionService : Service() {
         stateMachine.reset()
         lastPackage = null
 
+        val captureConfig = when (settings.forcedTier ?: settings.detectorTier) {
+            "A" -> CaptureConfig.TIER_A
+            "C" -> CaptureConfig.TIER_C
+            else -> CaptureConfig.TIER_B
+        }
+        Log.i(TAG, "Capture: ${captureConfig.maxCaptureDimension}px @${captureConfig.targetFps}fps")
         val cap = ScreenCapturer(
             projection = mp,
-            config = CaptureConfig.TIER_B,
+            config = captureConfig,
             handler = captureHandler,
             onProjectionStopped = { mainHandler.post { onSessionLost() } },
             onFrame = ::onFrame,
@@ -428,7 +446,14 @@ class ProtectionService : Service() {
         val runDetector = globalDelta >= GATE1_DELTA_THRESHOLD || hasMasks
 
         val sensitivity = parseSensitivity(s.sensitivity)
-        val detections = if (runDetector) detector.run(frame, sensitivity) else emptyList()
+        var detections = if (runDetector) detector.run(frame, sensitivity) else emptyList()
+
+        // Ochiq kiyim — NudeNet buni qila olmaydi (unda oyoq/yelka sinfi yo'q)
+        if (runDetector && s.blurRevealingClothes) {
+            skinExposure?.detect(frame)?.let { d ->
+                detections = detections + d
+            }
+        }
         if (detections.isNotEmpty()) {
             lastLabels = detections.joinToString(",") { it.label }.take(80)
         }
@@ -471,15 +496,23 @@ class ProtectionService : Service() {
      * kadr talabi buni uzadi.
      */
     private fun updateScrolling(delta: Int): Boolean {
+        val now = SystemClock.elapsedRealtime()
         if (scrollingState) {
-            if (delta < SCROLL_DELTA_EXIT) {
+            // Uzluksiz o'zgarish scroll emas, VIDEO. Haqiqiy scroll qisqa
+            // muddatli bo'ladi; video esa har kadrda o'zgaradi va qalqon
+            // o'chmay qolib, butun ekranni doimiy xira qiladi.
+            // Real qurilmada aynan shu kuzatildi (YouTube Shorts).
+            if (delta < SCROLL_DELTA_EXIT || now - scrollStartedAtMs > SCROLL_MAX_MS) {
                 scrollingState = false
                 scrollHighFrames = 0
             }
         } else {
             if (delta > SCROLL_DELTA_ENTER) {
                 scrollHighFrames++
-                if (scrollHighFrames >= SCROLL_ENTER_FRAMES) scrollingState = true
+                if (scrollHighFrames >= SCROLL_ENTER_FRAMES) {
+                    scrollingState = true
+                    scrollStartedAtMs = now
+                }
             } else {
                 scrollHighFrames = 0
             }
@@ -555,7 +588,7 @@ class ProtectionService : Service() {
         val st = stateMachine
         Log.i(
             METRIC_TAG,
-            "engine=%s inf=%dms(pre=%d run=%d post=%d) runAvg=%d/%d fps=%.1f avg=%.1fms max=%dms mask=%d/%d flicker=%d probe=%d/%d A=%.2f teri=%.2f stageB=%.0f%% labels=[%s] pkg=%s"
+            "engine=%s inf=%dms(pre=%d run=%d post=%d) runAvg=%d/%d fps=%.1f avg=%.1fms max=%dms mask=%d/%d flicker=%d probe=%d/%d A=%.2f teri=%.2f ochiq=%.2f(%dms) chroma=%.1f luma=%.0f failopen=%b stageB=%.0f%% labels=[%s] top=[%s] pkg=%s"
                 .format(
                     engineLabel, nudeNet?.lastInferenceMs ?: 0L,
                     nudeNet?.lastPreprocessMs ?: 0L, nudeNet?.lastRunMs ?: 0L,
@@ -565,7 +598,11 @@ class ProtectionService : Service() {
                     st.masks().count { it.isVisible }, st.totalMasksCreated,
                     st.flickerEvents, st.probesConfirmed, st.totalProbes,
                     detector.lastStageAScore, skinPrescreen.lastPeakRatio,
-                    detector.stageBRatio() * 100, lastLabels, lastPackage ?: "-",
+                    skinExposure?.lastRatio ?: -1f, skinExposure?.lastInferenceMs ?: 0L,
+                    skinPrescreen.lastMeanChroma, skinPrescreen.lastMeanLuma,
+                    skinPrescreen.lastLowSaturation,
+                    detector.stageBRatio() * 100, lastLabels,
+                    nudeNet?.lastTopClasses ?: "-", lastPackage ?: "-",
                 )
         )
     }
@@ -604,6 +641,17 @@ class ProtectionService : Service() {
         overlay.setProbeHoleFraction(maskConfig.probeHoleFraction)
         applyEngine(s.detectorEngine)
         nudeNet?.blurMaleChest = s.blurMaleChest
+        skinExposure?.threshold = s.revealingThreshold / 100f
+        if (s.blurRevealingClothes && skinExposure == null) {
+            captureHandler.post {
+                if (skinExposure == null) {
+                    skinExposure = runCatching { SkinExposureDetector(applicationContext) }
+                        .onFailure { Log.e(TAG, "Ochiq kiyim detektori yuklanmadi", it) }
+                        .getOrNull()
+                        ?.also { it.threshold = settings.revealingThreshold / 100f }
+                }
+            }
+        }
     }
 
     /**
@@ -622,10 +670,11 @@ class ProtectionService : Service() {
                 val nn = nudeNet ?: runCatching {
                     // TZ NFR-201: tier saqlangan bo'lsa ishlatamiz, bo'lmasa
                     // TIER_B bilan boshlab, benchmark natijasidan tier tanlaymiz.
-                    val stored = settings.detectorTier
+                    val forced = settings.forcedTier
+                    val stored = forced ?: settings.detectorTier
                     val cfg = DetectorConfig.byName(stored)
                     NudeNetDetector(applicationContext, cfg).also { d ->
-                        if (stored == null && d.benchmarkMs > 0) {
+                        if (forced == null && settings.detectorTier == null && d.benchmarkMs > 0) {
                             val picked = DetectorConfig.pickTier(d.benchmarkMs)
                             val name = DetectorConfig.nameOf(picked)
                             Log.i(TAG, "Tier aniqlandi: $name (benchmark=${d.benchmarkMs}ms)")
@@ -874,6 +923,14 @@ class ProtectionService : Service() {
 
         /** Kirish uchun shuncha ketma-ket kadr talab qilinadi. */
         private const val SCROLL_ENTER_FRAMES = 2
+
+        /**
+         * Scroll qalqoni shundan uzoq turmaydi.
+         *
+         * Uzluksiz yuqori delta — bu scroll emas, video. Cheksiz qalqon
+         * butun ekranni doimiy xira qilib qo'yadi (real qurilmada kuzatildi).
+         */
+        private const val SCROLL_MAX_MS = 1_200L
 
         private const val STATS_INTERVAL_MS = 500L
         private const val METRIC_LOG_INTERVAL_MS = 1_000L

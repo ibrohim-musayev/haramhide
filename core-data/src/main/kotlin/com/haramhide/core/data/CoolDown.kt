@@ -32,6 +32,9 @@ data class PendingChange(
 
         /** Yalang'och erkak ko'kragini blur qilishni o'chirish. */
         MALE_CHEST,
+
+        /** Ochiq kiyim aniqlashni o'chirish. */
+        REVEALING,
     }
 
     fun remainingMs(nowMs: Long = System.currentTimeMillis()): Long =

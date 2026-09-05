@@ -128,6 +128,8 @@ class MainActivity : ComponentActivity() {
                 onSetBlurIntensity = { save { repo.setBlurIntensity(it) } },
                 onSetScrollShield = { save { repo.setScrollShield(it) } },
                 onSetMaleChest = { save { repo.requestBlurMaleChest(it) } },
+                onSetRevealing = { save { repo.requestRevealingClothes(it) } },
+                onSetRevealingThreshold = { save { repo.setRevealingThreshold(it) } },
                 onSetUnblurLimit = { save { repo.setUnblurLimit(it) } },
                 onSetDebugOverlay = { save { repo.setDebugOverlay(it) } },
                 onCancelPending = { save { repo.cancelPending() } },

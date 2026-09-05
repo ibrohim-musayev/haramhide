@@ -23,7 +23,7 @@
     <string name="ob_welcome_body">Bu ilova ekraningizda paydo bo\'ladigan nomaqbul tasvirlarni aniqlab, ular ustiga xiralashtiruvchi qatlam chizadi. Barcha ishlov qurilmangizning o\'zida bajariladi.</string>
 
     <string name="ob_honesty_title">Avval halol gap</string>
-    <string name="ob_honesty_body">Bu ilova <b>hech qachon 100%% kafolat bermaydi</b>. U ba\'zi tasvirlarni o\'tkazib yuboradi, ba\'zilarini esa xato blur qiladi.\n\nBu xavfsizlik vositasi emas — o\'z-o\'zini nazorat vositasi. Agar uni chetlab o\'tishni istasangiz, buni albatta uddalaysiz. Maqsad — qiyinlashtirish, to\'sib qo\'yish emas.</string>
+    <string name="ob_honesty_body" formatted="false">Bu ilova <b>hech qachon 100% kafolat bermaydi</b>. U ba\'zi tasvirlarni o\'tkazib yuboradi, ba\'zilarini esa xato blur qiladi.\n\nBu xavfsizlik vositasi emas — o\'z-o\'zini nazorat vositasi. Agar uni chetlab o\'tishni istasangiz, buni albatta uddalaysiz. Maqsad — qiyinlashtirish, to\'sib qo\'yish emas.</string>
 
     <string name="ob_privacy_title">Ma\'lumotlaringiz</string>
     <string name="ob_privacy_body">Ilova <b>internetga umuman ulanmaydi</b>. Bu shunchaki va\'da emas: INTERNET ruxsati ilova manifestida e\'lon qilinmagan, ya\'ni tizim unga tarmoqqa chiqishga texnik imkon bermaydi.\n\nEkran tasvirlari hech qayerga saqlanmaydi va yuborilmaydi. Hisob ochish, ro\'yxatdan o\'tish, hech narsa kerak emas.</string>
@@ -78,6 +78,11 @@
     <string name="set_sens_strict">Qo\'shimcha: ochiq qorin va kiyim ostidan bilinadigan qismlar. Ko\'proq xato beradi.</string>
     <string name="set_blur_style">Blur uslubi</string>
     <string name="set_blur_intensity">Blur kuchi: %1$d%%</string>
+    <string name="set_revealing">Ochiq kiyimni ham yopish</string>
+    <string name="set_revealing_why">Yalang\'och oyoq, yelka va shu kabilar. Yuz hisobga olinmaydi.</string>
+    <string name="set_revealing_threshold">Ochiqlik chegarasi: %1$d%%</string>
+    <string name="set_revealing_hint">Kichik son — qattiqroq. Hijobli ayol ~5%%, ochiq kiyim ~29%%, sport ~80%%. Past chegarada bolalarning yozgi kiyimi ham yopilishi mumkin.</string>
+    <string name="cooldown_revealing">Ochiq kiyim sozlamasini o\'zgartirish so\'raldi</string>
     <string name="set_male_chest">Erkak ko\'kragi yopilsinmi</string>
     <string name="set_male_chest_why">Yalang\'och ko\'krakli erkaklar ham blur qilinadi. Erkak avrati bunga bog\'liq emas — u har doim yopiladi.</string>
     <string name="cooldown_male_chest">Erkak ko\'kragini yopish so\'raldi</string>

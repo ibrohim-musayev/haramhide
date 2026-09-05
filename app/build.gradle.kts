@@ -79,6 +79,10 @@ dependencies {
     implementation(project(":core-context"))
     implementation(project(":core-data"))
 
+    // LiteRT tranzitiv ravishda androidx.fragment 1.1.0 ni olib keladi;
+    // ActivityResult API kamida 1.3.0 ni talab qiladi (lint xatosi).
+    implementation(libs.androidx.fragment)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.service)

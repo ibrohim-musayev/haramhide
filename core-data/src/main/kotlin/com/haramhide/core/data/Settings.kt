@@ -47,6 +47,15 @@ data class AppSettings(
      * Default yoniq: himoyani jimgina zaiflashtirmaslik uchun.
      */
     val blurMaleChest: Boolean = true,
+    /**
+     * Ochiq kiyimni ham yopish (yalang'och oyoq, yelka va h.k.).
+     *
+     * NudeNet buni qila olmaydi — unda bunday sinf yo'q. Alohida
+     * segmentatsiya modeli ishlatiladi (docs/OCHIQ-KIYIM.md).
+     */
+    val blurRevealingClothes: Boolean = true,
+    /** Ochiq teri ulushi chegarasi, foizda. O'lchovga asoslangan default 25. */
+    val revealingThreshold: Int = 25,
     /** TZ FR-108. */
     val scrollShield: Boolean = true,
     /** Himoya o'chiq bo'lsa himoyalangan ilovada ekranni yopish. TZ FR-103. */
@@ -75,6 +84,8 @@ data class AppSettings(
     val onboardingDone: Boolean = false,
     /** Aniqlangan qurilma tier'i: "A" | "B" | "C". Bo'sh — hali o'lchanmagan (TZ NFR-201). */
     val detectorTier: String? = null,
+    /** Qo'lda majburlangan tier (debug/tajriba uchun). Bo'sh — avtomatik. */
+    val forcedTier: String? = null,
 )
 
 class SettingsRepository(private val context: Context) {
@@ -89,6 +100,8 @@ class SettingsRepository(private val context: Context) {
             securePolicy = p[KEY_SECURE_POLICY] ?: "FAIL_OPEN",
             protectedPackages = p[KEY_PACKAGES] ?: emptySet(),
             blurMaleChest = p[KEY_MALE_CHEST] ?: true,
+            blurRevealingClothes = p[KEY_REVEALING] ?: true,
+            revealingThreshold = p[KEY_REVEALING_T] ?: 25,
             scrollShield = p[KEY_SCROLL_SHIELD] ?: true,
             shieldWhenOff = p[KEY_SHIELD_WHEN_OFF] ?: true,
             protectionDesired = p[KEY_PROTECTION_DESIRED] ?: false,
@@ -100,6 +113,7 @@ class SettingsRepository(private val context: Context) {
             unblurDay = p[KEY_UNBLUR_DAY] ?: 0,
             onboardingDone = p[KEY_ONBOARDING] ?: false,
             detectorTier = p[KEY_TIER],
+            forcedTier = p[KEY_FORCED_TIER],
         )
     }
 
@@ -191,6 +205,7 @@ class SettingsRepository(private val context: Context) {
             PendingChange.Type.PACKAGES ->
                 setProtectedPackages(p.value.split(",").filter { it.isNotBlank() }.toSet())
             PendingChange.Type.MALE_CHEST -> edit { it[KEY_MALE_CHEST] = p.value.toBoolean() }
+            PendingChange.Type.REVEALING -> edit { it[KEY_REVEALING] = p.value.toBoolean() }
             PendingChange.Type.STOP -> setProtectionDesired(false)
         }
         cancelPending()
@@ -229,6 +244,8 @@ class SettingsRepository(private val context: Context) {
 
     suspend fun setDetectorTier(v: String) = edit { it[KEY_TIER] = v }
 
+    suspend fun setForcedTier(v: String) = edit { it[KEY_FORCED_TIER] = v }
+
     suspend fun setDetectorEngine(v: String) = edit { it[KEY_ENGINE] = v }
     suspend fun setSensitivity(v: String) = edit { it[KEY_SENSITIVITY] = v }
     suspend fun setBlurStyle(v: String) = edit { it[KEY_BLUR_STYLE] = v }
@@ -237,6 +254,19 @@ class SettingsRepository(private val context: Context) {
     suspend fun setSecurePolicy(v: String) = edit { it[KEY_SECURE_POLICY] = v }
     suspend fun setProtectedPackages(v: Set<String>) = edit { it[KEY_PACKAGES] = v }
     suspend fun setScrollShield(v: Boolean) = edit { it[KEY_SCROLL_SHIELD] = v }
+
+    suspend fun setRevealingThreshold(v: Int) = edit { it[KEY_REVEALING_T] = v.coerceIn(5, 90) }
+
+    /** O'chirish himoyani zaiflashtiradi — cool-down orqali (TZ FR-205). */
+    suspend fun requestRevealingClothes(v: Boolean): Boolean {
+        val current = settings.first()
+        val weakening = !v && current.blurRevealingClothes
+        return if (!CoolDownPolicy.requiresCoolDown(weakening, isCommitted(current))) {
+            edit { it[KEY_REVEALING] = v }; true
+        } else {
+            schedule(PendingChange.Type.REVEALING, v.toString(), current.coolDownMs); false
+        }
+    }
 
     /**
      * Erkak ko'kragi sozlamasi. O'chirish himoyani zaiflashtiradi,
@@ -268,6 +298,8 @@ class SettingsRepository(private val context: Context) {
         val KEY_SECURE_POLICY = stringPreferencesKey("secure_policy")
         val KEY_PACKAGES = stringSetPreferencesKey("protected_packages")
         val KEY_MALE_CHEST = booleanPreferencesKey("blur_male_chest")
+        val KEY_REVEALING = booleanPreferencesKey("blur_revealing")
+        val KEY_REVEALING_T = intPreferencesKey("revealing_threshold")
         val KEY_SCROLL_SHIELD = booleanPreferencesKey("scroll_shield")
         val KEY_SHIELD_WHEN_OFF = booleanPreferencesKey("shield_when_off")
         val KEY_PROTECTION_DESIRED = booleanPreferencesKey("protection_desired")
@@ -281,5 +313,6 @@ class SettingsRepository(private val context: Context) {
         val KEY_UNBLUR_DAY = longPreferencesKey("unblur_day")
         val KEY_ONBOARDING = booleanPreferencesKey("onboarding_done")
         val KEY_TIER = stringPreferencesKey("detector_tier")
+        val KEY_FORCED_TIER = stringPreferencesKey("forced_tier")
     }
 }

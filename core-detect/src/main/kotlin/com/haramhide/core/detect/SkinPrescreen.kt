@@ -34,6 +34,19 @@ import kotlin.math.min
  * Matn ekranlari, kod, xaritalar, qorong'i UI, o'yin grafikasi, hujjatlar —
  * ya'ni kunlik foydalanishning katta qismi.
  *
+ * ### Qorong'ilik tuzog'i (fail-open) — real qurilmada topilgan
+ *
+ * Teri qoidasi `R > 95` talab qiladi. Qorong'i kontentda (qorong'i rejimdagi
+ * ilova, xira video) hech bir piksel bu shartdan o'tmaydi va darvoza
+ * **hamma narsani to'sib qo'yadi** — model umuman ishga tushmaydi.
+ *
+ * Samsung A16 da YouTube ko'rilayotganda amalda kuzatildi: `luma=38`,
+ * `teri=0.00`, `A=0.00`, ya'ni himoya butunlay ishlamadi. Yorug'roq
+ * kontentda (`luma=88..97`) esa ishladi.
+ *
+ * Darvozaning xatosi faqat BIR TOMONGA bo'lishi kerak: o'tkazib yuborish
+ * emas, ortiqcha o'tkazish. Shuning uchun qorong'i kadrda ham fail-open.
+ *
  * ### To'yinganlik tuzog'i (fail-open)
  * Teri qoidasi `R > G > B` va `|R-G| > 15` ga tayanadi. Kulrang (qora-oq) yoki
  * kuchli rang filtri qo'yilgan kadrda bu shartlar hech qachon bajarilmaydi va
@@ -61,6 +74,12 @@ class SkinPrescreen(
     /** Diagnostika: oxirgi kadr rangsiz deb topildimi (fail-open holati). */
     @Volatile var lastLowSaturation: Boolean = false; private set
 
+    /** Diagnostika: oxirgi kadrning o'rtacha rang to'yinganligi (xroma). */
+    @Volatile var lastMeanChroma: Float = 0f; private set
+
+    /** Diagnostika: oxirgi kadrning o'rtacha yorqinligi. */
+    @Volatile var lastMeanLuma: Float = 0f; private set
+
     override fun score(frame: Frame): Float {
         val a = frame.analysis
         val w = a.width
@@ -71,6 +90,7 @@ class SkinPrescreen(
 
         // Rang to'yinganligi — teri qoidasi umuman ishlata oladimi?
         var chromaSum = 0L
+        var lumaSum = 0L
         var sampled = 0
         var i = 0
         while (i < px.size) {
@@ -78,15 +98,23 @@ class SkinPrescreen(
             val r = (p shr 16) and 0xFF
             val g = (p shr 8) and 0xFF
             val b = p and 0xFF
-            chromaSum += max(r, max(g, b)) - min(r, min(g, b))
+            val mx = max(r, max(g, b))
+            chromaSum += mx - min(r, min(g, b))
+            lumaSum += (r * 77 + g * 150 + b * 29) shr 8
             sampled++
             i += SATURATION_STRIDE
         }
         val meanChroma = if (sampled > 0) chromaSum.toFloat() / sampled else 0f
-        if (meanChroma < MIN_MEAN_CHROMA) {
+        val meanLuma = if (sampled > 0) lumaSum.toFloat() / sampled else 0f
+        lastMeanChroma = meanChroma
+        lastMeanLuma = meanLuma
+
+        // Qoida ishonchsiz bo'ladigan ikki holat: rang yo'q yoki juda qorong'i.
+        // Ikkalasida ham darvoza OCHIQ qoladi.
+        if (meanChroma < MIN_MEAN_CHROMA || meanLuma < MIN_MEAN_LUMA) {
             lastLowSaturation = true
             lastPeakRatio = 0f
-            return 1f   // fail-open: qoida ishonchsiz, darvoza ochiq
+            return 1f
         }
         lastLowSaturation = false
 
@@ -136,6 +164,16 @@ class SkinPrescreen(
          * Qora-oq foto ~0-3, oddiy rangli ekran 25-60 atrofida bo'ladi.
          */
         const val MIN_MEAN_CHROMA = 8f
+
+        /**
+         * O'rtacha yorqinlikdan past bo'lsa teri qoidasi ishonchsiz.
+         *
+         * Qoida `R > 95` talab qiladi — o'rtacha yorqinlik 60 dan past
+         * bo'lganda skin sifatida belgilanadigan piksel deyarli qolmaydi.
+         * Samsung A16 da o'lchandi: YouTube video `luma=38` da darvoza
+         * hamma narsani to'sib qo'ydi, `luma=88..97` da esa ishladi.
+         */
+        const val MIN_MEAN_LUMA = 60f
     }
 
     private fun isSkin(argb: Int): Boolean {

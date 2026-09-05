@@ -16,3 +16,28 @@ docs/ADR-002-litsenziya-agpl.md da.
 KVANTIZATSIYA: bajarilmagan. INT8 ga o'tkazish kalibrlash uchun haqiqiy
 rasmlar to'plamini talab qiladi, u esa hozircha yo'q (TZ 8.5). FP32 12 MB
 APK chegarasiga (45 MB) bemalol sig'adi. Golden set yig'ilgach qayta ko'riladi.
+
+--------------------------------------------------------------------------
+selfie_multiclass_256.tflite
+--------------------------------------------------------------------------
+Manba : MediaPipe Image Segmenter — Selfie Multiclass (256x256, float32)
+        https://ai.google.dev/edge/mediapipe/solutions/vision/image_segmenter
+Hajmi : 15 MB
+Sinflar: background, hair, body-skin, face-skin, clothes, others
+
+LITSENZIYA: Apache License 2.0 (Google / MediaPipe)
+AGPL-3.0 bilan mos.
+
+NEGA AYNAN SHU MODEL
+
+Bu ilovaga "ochiq kiyingan" holatni aniqlash kerak edi. NudeNet buni
+qila olmaydi — unda oyoq, son, yelka uchun sinf umuman yo'q, u faqat
+yalang'ochlikni biladi.
+
+Ko'rib chiqilgan, LEKIN RAD ETILGAN muqobil:
+  mattmdjaga/segformer_b2_clothes va sayeed99/segformer_b3_clothes —
+  ATR datasetida o'qitilgan, aynan kerakli sinflarga ega (Left-leg,
+  Right-arm va h.k.). Lekin ikkalasi ham NVIDIA SegFormer asosida, uning
+  litsenziyasi esa foydalanishni "research or evaluation purposes only"
+  bilan cheklaydi. sayeed99 o'zini MIT deb ko'rsatgan, ammo NVIDIA
+  og'irliklarini qayta litsenziyalash mumkin emas.
